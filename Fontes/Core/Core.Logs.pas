@@ -20,7 +20,7 @@ Type
   end;
 
   TLog = class(TInterfacedObject, iLog)
-  private
+  strict private
 
   public
     class function New: iLog;
@@ -32,6 +32,10 @@ Type
   end;
 
 implementation
+
+uses
+  {Classes de Sistema}
+  System.IOUtils;
 
 { TLog }
 
@@ -64,19 +68,18 @@ initialization
   //Add Log File and console providers
   Logger.Providers.Add(GlobalLogFileProvider);
   Logger.Providers.Add(GlobalLogConsoleProvider);
-  //Configure provider options
-  with GlobalLogFileProvider do
- 	begin
-    FileName := StringReplace(ExtractFilePath(Application.ExeName), 'bin\', '', [rfReplaceAll])
-                  + 'log\'
-                  + StringReplace(ExtractFileName(Application.ExeName).Replace('.exe',''), 'bin\', '', [rfReplaceAll])
-                  + '.log';
+  {Configure provider options}
+  GlobalLogFileProvider.FileName := StringReplace(ExtractFilePath(Application.ExeName), 'Bin\', 'Log\', [rfReplaceAll])
+                                  + StringReplace(ExtractFileName(Application.ExeName), 'exe', 'log', [rfReplaceAll]);
 
-    Enabled         := True;
-    LogLevel        := LOG_DEBUG;
-    DailyRotate     := True;
-    MaxFileSizeInMB := 20;
-  end;
+  if not TDirectory.Exists(StringReplace(ExtractFilePath(Application.ExeName), 'Bin\', 'Log\', [rfReplaceAll])) then
+    TDirectory.CreateDirectory(StringReplace(ExtractFilePath(Application.ExeName), 'Bin\', 'Log\', [rfReplaceAll]));
+
+  GlobalLogFileProvider.Enabled         := True;
+  GlobalLogFileProvider.LogLevel        := LOG_DEBUG;
+  GlobalLogFileProvider.DailyRotate     := True;
+  GlobalLogFileProvider.MaxFileSizeInMB := 20;
+
 
   with GlobalLogConsoleProvider do
   begin

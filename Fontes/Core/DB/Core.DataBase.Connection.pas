@@ -194,7 +194,7 @@ begin
       FConnection.Params.Password := arqIni.ReadString(FAppName, 'Password', 'postgres');
 
       gEnv.Log.Info(Self.UnitName + Format(' | Connected to the database %s.', [FConnection.ConnectionName]));
-      Self.Connect;
+//      Self.Connect;
     finally
       FreeAndNil(arqIni);
     end;

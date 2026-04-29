@@ -21,7 +21,8 @@ uses
   Core.DataBase.Types in '..\Fontes\Core\DB\Core.DataBase.Types.pas',
   Core.Entidades.CustomAttributes in '..\Fontes\Core\Entidades\Core.Entidades.CustomAttributes.pas',
   Core.Entidades.ModelBase in '..\Fontes\Core\Entidades\Core.Entidades.ModelBase.pas',
-  Core.Thread in '..\Fontes\Core\Core.Thread.pas';
+  Core.Thread in '..\Fontes\Core\Core.Thread.pas',
+  Services.Users in '..\Fontes\Services\Services.Users.pas';
 
 {$R *.RES}
 
