@@ -55,8 +55,8 @@ end;
 
 procedure TIntegracaoWS.LoadApiData;
 begin
-  FApiIntegracao.UserName := vgIntegParam.PAuthUser;
-  FApiIntegracao.Password := vgIntegParam.PAuthPass;
+//  FApiIntegracao.UserName := vgIntegParam.PAuthUser;
+//  FApiIntegracao.Password := vgIntegParam.PAuthPass;
 end;
 
 function TIntegracaoWS.ObterImagem(pUrl, pDir, pFileName, pTipoAtivo: String): Boolean;

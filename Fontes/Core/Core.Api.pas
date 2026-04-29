@@ -12,7 +12,7 @@ Uses
   ,System.SysUtils
   ,System.DateUtils
   {Classes de Negócio}
-  ,PrgLog;
+  ,Core.Environment;
 
 type
   EApiIntegracaoError = Exception;
@@ -78,9 +78,6 @@ implementation
 
 { TApiIntegracao }
 
-///<sumary>Mètodo para criar a instância da classe</sumary>
-///<remarks>Método responsável por criar a instância da classe da memória e outros objetos.</remarks>
-///<returns>Não há retorno</returns>
 constructor TApiIntegracao.Create;
 begin
   inherited Create;
@@ -88,9 +85,6 @@ begin
   FApiAuthorization := TApiAuthorization.Create;
 end;
 
-///<sumary>Mètodo para remover a instância da classe</sumary>
-///<remarks>Método responsável para remover a instância da classe da memória.</remarks>
-///<returns>Não há retorno</returns>
 destructor TApiIntegracao.Destroy;
 begin
   FreeAndNil(FApiResponse);
@@ -98,10 +92,6 @@ begin
   inherited;
 end;
 
-///<sumary>Método para retornar o método para request</sumary>
-///<remarks>Método para devolver o método do request com base no parâmetro de entrada pMethod.</remarks>
-///<param name='pAuthorization'>tipo do método a ser verificado</param>
-///<returns>String com a URL a ser utilizada</returns>
 procedure TApiIntegracao.EnviarRequisicao(const pAuthorization: Boolean);
 var
   vClient: TRESTClient;
@@ -160,14 +150,14 @@ begin
         except
           on E: Exception do
           begin
-            vgLog.DebugOutThread(Self.UnitName + ' | Erro ao realizar a comunicação com o webservice.' + #13#10 + E.Message, []);
+            gEnv.Log.Error(Self.UnitName + ' | Erro ao realizar a comunicação com o webservice.' + #13#10 + E.Message);
             raise E;
           end;
         end;
 
         if Self.ApiResponse.StatusCode > 300 then
         begin
-          vgLog.DebugOutThread(Self.UnitName + ' | StatusCode: ' + IntToStr(Self.ApiResponse.StatusCode) + ' - ' + Self.ApiResponse.Content, []);
+          gEnv.Log.Error(Self.UnitName + ' | StatusCode: ' + IntToStr(Self.ApiResponse.StatusCode) + ' - ' + Self.ApiResponse.Content);
           raise Exception.Create('StatusCode: ' + IntToStr(Self.ApiResponse.StatusCode) + ' - ' + Self.ApiResponse.Content);
         end;
       finally
@@ -181,10 +171,6 @@ begin
   end;
 end;
 
-///<sumary>Método para retornar o método para request</sumary>
-///<remarks>Método para devolver o método do request com base no parâmetro de entrada pMethod.</remarks>
-///<param name='pMethod'>tipo do método a ser verificado</param>
-///<returns>String com a URL a ser utilizada</returns>
 function TApiIntegracao.GetMethod(const pMethod: TMethodType): TRESTRequestMethod;
 begin
   case pMethod of
@@ -197,17 +183,11 @@ begin
   end
 end;
 
-///<sumary>Método para retornar valor da variável FURL</sumary>
-///<remarks>Função que retorna o valor da variável FURL com o valor da urla a ser utilizado na conexão.</remarks>
-///<returns>String com a URL a ser utilizada</returns>
 function TApiIntegracao.GetUrl: String;
 begin
   Result := FUrl;
 end;
 
-///<sumary>Método para realizar a autorização na obtenção de token</sumary>
-///<remarks>Método responsável por validar informar os dados necessários para realizar o login.</remarks>
-///<returns>Não há retorno</returns>
 procedure TApiIntegracao.SetAuthorization;
 var
   vBody: String;
@@ -229,9 +209,6 @@ begin
   Self.Body := vBody;
 end;
 
-///<sumary>Método para validar preenchimento de campos obrigatórios</sumary>
-///<remarks>Método responsável para validar se a URL, Username e Password estão preenchidos.</remarks>
-///<returns>Não há retorno</returns>
 procedure TApiIntegracao.ValidarDadosObrigatorios;
 begin
   if Self.FUrl.IsEmpty then

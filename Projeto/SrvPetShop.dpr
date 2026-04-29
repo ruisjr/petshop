@@ -11,7 +11,6 @@ uses
   Core.Global in '..\Fontes\Core\Core.Global.pas',
   Core.Logs in '..\Fontes\Core\Core.Logs.pas',
   Core.Servico in '..\Fontes\Core\Core.Servico.pas',
-  Core.WebService in '..\Fontes\Core\Core.WebService.pas',
   Core.DataBase.Interfaces in '..\Fontes\Core\DB\Interfaces\Core.DataBase.Interfaces.pas',
   Core.DataBase.Access in '..\Fontes\Core\DB\Core.DataBase.Access.pas',
   Core.DataBase.Connection in '..\Fontes\Core\DB\Core.DataBase.Connection.pas',

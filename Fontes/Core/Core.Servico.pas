@@ -9,9 +9,9 @@ Uses
   ,Winapi.Windows
   ,System.SysUtils
   {Classes de Negócio}
-  ,PrgLog
-  ,Core.DataBase.Types
-  ,Core.Thread;
+  ,Core.Thread
+  ,Core.Environment
+  ,Core.DataBase.Types;
 
 
 type
@@ -22,12 +22,12 @@ type
     destructor Destroy; override;
 
     {Procedures}
-    procedure Iniciar; virtual;
-    procedure Finalizar; virtual;
+    procedure StartThread; virtual;
+    procedure StopThread; virtual;
     procedure ExecutarEnvio; virtual;
 
     {Functions}
-    function GetSituacao: TStatusService; virtual;
+    function GetStatus: TStatusService; virtual;
 
     property PThread: TThreadIntegracaoBase read FThread write FThread;
   end;
@@ -38,7 +38,7 @@ implementation
 
 destructor TServicoBase.Destroy;
 begin
-  vgLog.DebugOutThread(Self.UnitName + ' | Destruindo thread...', []);
+  gEnv.Log.Info(Self.UnitName + ' | Destroying Thread.');
   FreeAndNil(FThread);
   inherited;
 end;
@@ -48,7 +48,7 @@ begin
   PThread.ExecutarEnvio;
 end;
 
-procedure TServicoBase.Finalizar;
+procedure TServicoBase.StopThread;
 var
   vInicioTick: Cardinal;
 begin
@@ -58,18 +58,19 @@ begin
     if FThread.Finished then
       Exit;
 
-    // Aguarda terminar com timeout
+    {Aguarda terminar com timeout}
     while (GetTickCount - vInicioTick) < 10000 do
     begin
       if FThread.Finished then
         Break;
+
       Application.ProcessMessages;
       Sleep(100);
     end;
 
     if not FThread.Finished then
     begin
-      vgLog.DebugOutThread(Self.UnitName + ' | Finalizando thread...', []);
+      gEnv.Log.Info(Self.UnitName + ' | Ending Thread.');
       FThread.OnTerminate := nil;
       FThread.Terminate;
       FThread.WaitFor;
@@ -77,14 +78,14 @@ begin
   end;
 end;
 
-function TServicoBase.GetSituacao: TStatusService;
+function TServicoBase.GetStatus: TStatusService;
 begin
   Result := ssCreated;
   if Assigned(PThread) then
     Result := PThread.Status;
 end;
 
-procedure TServicoBase.Iniciar;
+procedure TServicoBase.StartThread;
 begin
   FThread.Start;
 end;

@@ -4,8 +4,7 @@ interface
 
 Uses
   {Classes de Sistema}
-   PrgLog
-  ,System.Classes
+   System.Classes
   ,System.SyncObjs
   ,System.SysUtils
   ,System.DateUtils

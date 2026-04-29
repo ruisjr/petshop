@@ -36,7 +36,6 @@ end;
 
 destructor TEnvironment.Destroy;
 begin
-  FreeAndNil(FLog);
   inherited;
 end;
 

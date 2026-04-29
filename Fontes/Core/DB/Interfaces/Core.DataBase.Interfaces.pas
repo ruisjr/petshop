@@ -3,17 +3,23 @@ unit Core.DataBase.Interfaces;
 interface
 
 uses
-  //Classes de sistema
-  Data.DB, System.Generics.Collections, Uni, System.Rtti, System.Classes, Vcl.Forms,
-  //Classes de negócio
-  Core.DataBase.Types;
+  {Classes de sistema}
+   Data.DB
+  ,Vcl.Forms
+  ,System.Rtti
+  ,System.Classes
+  ,FireDac.Comp.Client
+  ,System.Generics.Collections
+  {Classes de negócio}
+  ,Core.DataBase.Types;
 
 
 type
   IDBConnection = interface
     ['{973F5068-D967-41C5-A8D0-BF8F63DECFCA}']
     {Functions}
-    function GetConnection: TUniConnection;
+    function GetConnection: TFDConnection;
+
     {Procedures}
     procedure BeginTransaction;
     procedure CommitTransaction;

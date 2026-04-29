@@ -4,11 +4,13 @@ interface
 
 uses
   {Classes de sistema}
-   Uni
-  ,Data.Db
+   Data.Db
   ,System.Rtti
   ,System.Classes
   ,System.SysUtils
+  ,FireDac.Stan.Param
+  ,FireDAC.Stan.Option
+  ,FireDAC.Comp.Client
   ,System.Generics.Collections
   {Classes de negócio}
   ,Core.DataBase.Rtti
@@ -21,9 +23,9 @@ type
   private
     FWhereClause: TStrings;
     FParams: TParams;
-    FQuery: TUniQuery;
+    FQuery: TFDQuery;
   public
-    constructor Create(const pDBConn: TDataBaseConnection = nil);
+    constructor Create;
 
     {Functions}
     function Where(const pFieldName: String; const pOperator: TOperatorType; const pValue: TValue): IDataBaseQuery<T>;
@@ -51,20 +53,15 @@ implementation
 
 { TQueryBuilder }
 
-constructor TQueryBuilder<T>.Create(const pDBConn: TDataBaseConnection = nil);
+constructor TQueryBuilder<T>.Create;
 begin
   FWhereClause := TStringList.Create;
 
-  FQuery := TUniQuery.Create(nil);
-
-  if pDBConn <> nil then
-    FQuery.Connection := pDBConn.GetConnection
-  else
-    FQuery.Connection := vgDBConnection.GetConnection;
-
-  FQuery.FetchRows := 25;
-  FQuery.UniDirectional := True;
-  FQuery.SpecificOptions.Values['FetchAll'] := 'False';
+  FQuery := TFDQuery.Create(nil);
+  FQuery.Connection := vgDBConnection.GetConnection;
+  FQuery.FetchOptions.RowsetSize := 25;
+  FQuery.FetchOptions.Unidirectional := True;
+  FQuery.FetchOptions.Mode := fmOnDemand;
 end;
 
 function TQueryBuilder<T>.DataSet: TDataSet;
@@ -98,7 +95,7 @@ begin
     FQuery.ExecSQL;
   except
     on E: Exception do
-      raise Exception.Create('Ocorreu erro ao executar instrução na base de dados'+#10#13+E.Message);
+      raise Exception.Create('An error occurred while executing the instruction in the database.'+#10#13+E.Message);
   end;
 
   if Assigned(FParams) then

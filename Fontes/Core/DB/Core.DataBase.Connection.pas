@@ -4,15 +4,29 @@ interface
 
 uses
   {Classes de sistema}
-   Uni
+   FireDAC.DatS
+  ,FireDAC.DApt
+  ,FireDAC.Phys
+  ,FireDAC.UI.Intf
+  ,FireDAC.Phys.PG
+  ,FireDAC.Stan.Def
+  ,FireDAC.DApt.Intf
+  ,FireDAC.Stan.Intf
+  ,FireDAC.Phys.Intf
+  ,FireDAC.Stan.Pool
+  ,FireDAC.VCLUI.Wait
+  ,FireDAC.Stan.Param
+  ,FireDAC.Stan.Async
+  ,FireDAC.Stan.Error
+  ,FireDAC.Phys.PGDef
+  ,FireDAC.Stan.Option
+  ,Firedac.Comp.Client
+  ,FireDAC.Comp.DataSet
   ,Data.DB
-  ,CRAccess
   ,Vcl.Forms
-  ,UniProvider
   ,System.IniFiles
   ,System.SyncObjs
   ,System.SysUtils
-  ,OracleUniProvider
   {Classes de Negócio}
   ,Core.Environment
   ,Core.DataBase.Interfaces;
@@ -20,8 +34,9 @@ uses
 type
   TDataBaseConnection = class(TInterfacedObject, IDBConnection)
   private
+    FLink: TFDPhysPGDriverLink;
     FAppName: String;
-    FConnection: TUniConnection;
+    FConnection: TFDConnection;
 
     class var FInstance: IDBConnection;
     class var FConnectionLock: TCriticalSection;
@@ -35,7 +50,7 @@ type
     class procedure FreeInstance; reintroduce;
 
     {Functions}
-    function GetConnection: TUniConnection;
+    function GetConnection: TFDConnection;
 
     {procedures}
     procedure Connect;
@@ -50,6 +65,9 @@ var
   vgDBConnection: TDataBaseConnection;
 
 implementation
+
+uses
+  Core.Global;
 
 { TDataBaseConnection }
 
@@ -68,19 +86,19 @@ end;
 procedure TDataBaseConnection.Connect;
 begin
   try
-    FConnection.Connect;
+    FConnection.Connected := True;
   except
     on E: Exception do
     begin
       gEnv.Log.Error(Format('%s | %s #13#10 %s', [Self.UnitName, Self.MethodName(Self), E.Message]));
-      raise Exception.Create('Não foi possível abrir a conexão com o banco de dados.'+#13#10 + E.Message);
+      raise Exception.Create('The connection to the database could not be opened.'+#13#10 + E.Message);
     end;
   end;
 end;
 
 constructor TDataBaseConnection.Create;
 begin
-  FAppName := 'SrvIntegracaoSimplus';
+  FAppName := cAppName;
   LoadConfig;
 end;
 
@@ -98,12 +116,12 @@ begin
   if (FConnection.Connected) then
   begin
     try
-      FConnection.Disconnect;
+      FConnection.Connected := False;
     except
       on E : Exception do
       begin
         gEnv.Log.Error(Format('%s | %s #13#10 %s', [Self.UnitName, Self.MethodName(Self), E.Message]));
-        raise Exception.Create('Não foi possível fechar a conexão com o banco de dados.' + #13#10 + E.Message);
+        raise Exception.Create('The connection to the database could not be closed.' + #13#10 + E.Message);
       end;
     end;
   end;
@@ -119,7 +137,7 @@ begin
   end;
 end;
 
-function TDataBaseConnection.GetConnection: TUniConnection;
+function TDataBaseConnection.GetConnection: TFDConnection;
 begin
   Result := FConnection;
 end;
@@ -139,34 +157,53 @@ end;
 
 procedure TDataBaseConnection.LoadConfig;
 var
+  path: String;
+  arqIni: TIniFile;
   vMessage: String;
 begin
-  FConnection := TUniConnection.Create(nil);
   try
-    FConnection.ProviderName := 'Oracle';
+    path := StringReplace(ExtractFilePath(Application.ExeName),'bin\', '', [rfReplaceAll]) + 'drivers\FDConnectionDefs.ini';
+    arqIni := TIniFile.Create(path);
+    try
+      FLink := TFDPhysPGDriverLink.Create(nil);
+      FLink.Release;
+      FLink.VendorLib := StringReplace(ExtractFilePath(Application.ExeName), 'bin\', '', [rfReplaceAll]) + 'lib\libpq.dll';
 
-    FConnection.AutoCommit  := False;
-    FConnection.LoginPrompt := False;
+      FConnection := TFDConnection.Create(nil);
 
-    FConnection.Pooling := True;
-    FConnection.PoolingOptions.Validate := True;
+      FConnection.DriverName        := arqIni.ReadString(FAppName, 'DriverID', 'PG');
+      FConnection.ConnectionName    := FAppName;
+      FConnection.ConnectionDefName := FAppName;
+      FConnection.LoginPrompt       := False;
+      FConnection.Name              := 'conn' + FAppName;
 
-    FConnection.SpecificOptions.Values['Direct']     := 'False';
-    FConnection.SpecificOptions.Values['DateFormat'] := 'DD/MM/RRRR';
+      with (TFDPhysPGConnectionDefParams(FConnection.Params)) do
+      begin
+        Port            := arqIni.ReadInteger(FAppName, 'Port', 5432);
+        Server          := arqIni.ReadString(FAppName, 'Server', 'localhost');
+        DriverID        := arqIni.ReadString(FAppName, 'DriverID', '');
+        Database        := arqIni.ReadString(FAppName, 'Database', '');
+        Password        := arqIni.ReadString(FAppName, 'Password', 'postgres');
+        UserName        := arqIni.ReadString(FAppName, 'User_Name', 'postgres');
+        LoginTimeout    := arqIni.ReadInteger(FAppName, 'Timeout', 30);
+        ApplicationName := FAppName;
+        CharacterSet    := csUTF8;
+      end;
 
-    FConnection.DefaultTransaction.IsolationLevel := TCRIsolationLevel.ilReadCommitted;
+      FConnection.Params.UserName := arqIni.ReadString(FAppName, 'User_Name', 'postgres');
+      FConnection.Params.Password := arqIni.ReadString(FAppName, 'Password', 'postgres');
 
-    gEnv.Log.Error(Format('%s | Tentativa de conexão com banco de dados %s.', [Self.UnitName, FConnection.Server]));
-
-    Self.Connect;
-
-    gEnv.Log.Error(Format('%s | Conectado no banco de dados %s com sucesso.', [Self.UnitName, FConnection.Server]));
+      gEnv.Log.Info(Self.UnitName + Format(' | Connected to the database %s.', [FConnection.ConnectionName]));
+      Self.Connect;
+    finally
+      FreeAndNil(arqIni);
+    end;
   except
-    on E : Exception do
+    on E: Exception do
     begin
-      vMessage := Format('%s | %s #13#10 %s #13#10 Aplicação será finalizada.', [Self.UnitName, Self.MethodName(Self), E.Message]);
+      vMessage := Self.UnitName + ' | ' + Self.MethodName(Self) + #13#10 + E.Message + #13#10 + 'The application will be finalized.';
       gEnv.Log.Error(vMessage);
-      raise Exception.Create('Não foi possível carregar os dados da conexão com o banco de dados.' + #13#10 + E.Message);
+      raise Exception.Create('The database connection data could not be loaded.' + #13#10 + E.Message);
     end;
   end;
 end;

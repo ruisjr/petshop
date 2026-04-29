@@ -11,9 +11,9 @@ uses
   ,System.Rtti
   ,System.Generics.Collections
   {Classes de negócio}
-  ,PrgLog
-  ,Core.DataBase.Types
   ,Core.Exceptions
+  ,Core.Environment
+  ,Core.DataBase.Types
   ,Core.DataBase.Connection
   ,Core.DataBase.RttiHelper
   ,Core.DataBase.Interfaces
@@ -40,7 +40,7 @@ type
     procedure Clear;
   public
     {Construtores e Destrutores}
-    constructor Create(const pDBConn: TDataBaseConnection = nil); overload;
+    constructor Create; overload;
     constructor Create(const pEntity: T); overload;
     destructor Destroy; override;
 
@@ -79,11 +79,11 @@ uses
 
 { TDataBaseAccess }
 
-constructor TDataBaseDAO<T>.Create(const pDBConn: TDataBaseConnection = nil);
+constructor TDataBaseDAO<T>.Create;
 begin
   inherited Create;
   FList := TObjectList<T>.Create;
-  FQuery := TQueryBuilder<T>.Create(pDBConn);
+  FQuery := TQueryBuilder<T>.Create;
   FParameters := TDictionary<String, TValue>.Create;
 
   if FEntity = nil then
@@ -120,7 +120,7 @@ begin
   except
     on E: Exception do
     begin
-      vgLog.DebugOut('Ocorreu um erro ao obter os dados provenientes do banco de dados.'+ #13#10 + 'Detalhes: ' + E.Message, []);
+      gEnv.Log.Error('An error occurred while retrieving data from the database.'+ #13#10 + 'Details: ' + E.Message);
     end;
   end;
 end;
@@ -138,7 +138,7 @@ begin
     FQuery.ExecSQL;
   except
     on E: Exception do
-      vgLog.DebugOut('Ocorreu erro ao deletar o registro!' + #13#10 + 'Detalhes: ' + E.Message, [])
+      gEnv.Log.Error('An error occurred while deleting the record.' + #13#10 + 'Details: ' + E.Message)
   end;
 end;
 
@@ -155,7 +155,7 @@ begin
     FQuery.ExecSQL;
   except
     on E: Exception do
-      vgLog.DebugOut('Ocorreu erro ao deletar o registro!' + #13#10 + 'Detalhes: ' + E.Message, [])
+      gEnv.Log.Error('An error occurred while deleting the record.' + #13#10 + 'Details: ' + E.Message)
   end;
 end;
 
@@ -276,8 +276,8 @@ begin
   except
     on E: Exception do
     begin
-      vgLog.DebugOut('Ocorreu erro ao inserir o registro!' + #13#10 + 'Detalhes: ' + E.Message, []);
-      raise EDataBaseDAOError.Create(format('Ocorreu erro ao inserir o registro na base de dados.'+#13+'Classe %s.', [pEntity.ClassName]));
+      gEnv.Log.Error('An error occurred while inserting the record.' + #13#10 + 'Details: ' + E.Message);
+      raise EDataBaseDAOError.Create(format('An error occurred while inserting the record into the database.'+#13+'Class %s.', [pEntity.ClassName]));
     end;
   end;
 end;
@@ -325,8 +325,8 @@ begin
   except
     on E: Exception do
     begin
-      vgLog.DebugOut('Ocorreu erro ao atualizar o registro!' + #13#10 + 'Detalhes: ' + E.Message, []);
-      raise EDataBaseDAOError.Create(format('Ocorreu erro ao atualizar o registro na base de dados.'+#13+'Classe %s.', [pEntity.ClassName]));
+      gEnv.Log.Error('An error occurred while updating the record.' + #13#10 + 'Details: ' + E.Message);
+      raise EDataBaseDAOError.Create(format('An error occurred while updating the record in the database.'+#13+'Class %s.', [pEntity.ClassName]));
     end;
   end;
 end;
