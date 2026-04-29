@@ -38,7 +38,7 @@ implementation
 
 destructor TServicoBase.Destroy;
 begin
-  gEnv.Log.Info(Self.UnitName + ' | Destroying Thread.');
+  Env.Log.Info(Self.UnitName + ' | Destroying Thread.');
   FreeAndNil(FThread);
   inherited;
 end;
@@ -70,7 +70,7 @@ begin
 
     if not FThread.Finished then
     begin
-      gEnv.Log.Info(Self.UnitName + ' | Ending Thread.');
+      Env.Log.Info(Self.UnitName + ' | Ending Thread.');
       FThread.OnTerminate := nil;
       FThread.Terminate;
       FThread.WaitFor;

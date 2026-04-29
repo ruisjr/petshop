@@ -35,7 +35,9 @@ implementation
 
 uses
   {Classes de Sistema}
-  System.IOUtils;
+   System.IOUtils
+  {Classes de Negócio}
+  ,Core.Global;
 
 { TLog }
 
@@ -65,26 +67,38 @@ begin
 end;
 
 initialization
-  //Add Log File and console providers
+begin
+  {Add Log File and console providers}
   Logger.Providers.Add(GlobalLogFileProvider);
   Logger.Providers.Add(GlobalLogConsoleProvider);
   {Configure provider options}
-  GlobalLogFileProvider.FileName := StringReplace(ExtractFilePath(Application.ExeName), 'Bin\', 'Log\', [rfReplaceAll])
+  GlobalLogFileProvider.FileName := StringReplace(ExtractFilePath(Application.ExeName), cDirectoryExec+'\', 'Log\', [rfReplaceAll])
                                   + StringReplace(ExtractFileName(Application.ExeName), 'exe', 'log', [rfReplaceAll]);
 
-  if not TDirectory.Exists(StringReplace(ExtractFilePath(Application.ExeName), 'Bin\', 'Log\', [rfReplaceAll])) then
-    TDirectory.CreateDirectory(StringReplace(ExtractFilePath(Application.ExeName), 'Bin\', 'Log\', [rfReplaceAll]));
+  {Se o diretório não existe, cria.}
+  if not TDirectory.Exists(StringReplace(ExtractFilePath(Application.ExeName), cDirectoryExec+'\', 'Log\', [rfReplaceAll])) then
+    TDirectory.CreateDirectory(StringReplace(ExtractFilePath(Application.ExeName), cDirectoryExec+'\', 'Log\', [rfReplaceAll]));
 
+  {Se houver o parâmetro -debug na inicilização, altera o logLEvel para Debug}
+  if FindCmdLineSwitch('debug') then
+  begin
+    GlobalLogFileProvider.LogLevel    := LOG_DEBUG;
+    GlobalLogConsoleProvider.LogLevel := LOG_DEBUG;
+  end
+  else
+  begin
+    GlobalLogFileProvider.LogLevel    := LOG_BASIC;
+    GlobalLogConsoleProvider.LogLevel := LOG_BASIC;
+  end;
+
+  {LogFileProvider}
   GlobalLogFileProvider.Enabled         := True;
-  GlobalLogFileProvider.LogLevel        := LOG_DEBUG;
   GlobalLogFileProvider.DailyRotate     := True;
   GlobalLogFileProvider.MaxFileSizeInMB := 20;
 
+  {LogConsoleProvider}
+  GlobalLogConsoleProvider.Enabled         := True;
+  GlobalLogConsoleProvider.ShowEventColors := True;
+end;
 
-  with GlobalLogConsoleProvider do
-  begin
-    Enabled         := True;
-    LogLevel        := LOG_DEBUG;
-    ShowEventColors := True;
-  end;
 end.

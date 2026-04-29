@@ -150,14 +150,14 @@ begin
         except
           on E: Exception do
           begin
-            gEnv.Log.Error(Self.UnitName + ' | Erro ao realizar a comunicação com o webservice.' + #13#10 + E.Message);
+            Env.Log.Error(Self.UnitName + ' | Erro ao realizar a comunicação com o webservice.' + #13#10 + E.Message);
             raise E;
           end;
         end;
 
         if Self.ApiResponse.StatusCode > 300 then
         begin
-          gEnv.Log.Error(Self.UnitName + ' | StatusCode: ' + IntToStr(Self.ApiResponse.StatusCode) + ' - ' + Self.ApiResponse.Content);
+          Env.Log.Error(Self.UnitName + ' | StatusCode: ' + IntToStr(Self.ApiResponse.StatusCode) + ' - ' + Self.ApiResponse.Content);
           raise Exception.Create('StatusCode: ' + IntToStr(Self.ApiResponse.StatusCode) + ' - ' + Self.ApiResponse.Content);
         end;
       finally

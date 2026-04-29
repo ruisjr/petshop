@@ -153,7 +153,7 @@ begin
   if (not pLogForce) and (not FLogTracking) then
     Exit;
 
-  gEnv.Log.Info(PMsg);
+  Env.Log.Info(PMsg);
 end;
 
 procedure TThreadIntegracaoBase.SetDataUltimoEnvio(Value: TDateTime);

@@ -4,9 +4,14 @@ interface
 
 uses
   {Classes de sistema}
-   FireDAC.DatS
+   Data.DB
+  ,Vcl.Forms
+  ,FireDAC.DatS
   ,FireDAC.DApt
   ,FireDAC.Phys
+  ,System.IniFiles
+  ,System.SyncObjs
+  ,System.SysUtils
   ,FireDAC.UI.Intf
   ,FireDAC.Phys.PG
   ,FireDAC.Stan.Def
@@ -22,13 +27,7 @@ uses
   ,FireDAC.Stan.Option
   ,Firedac.Comp.Client
   ,FireDAC.Comp.DataSet
-  ,Data.DB
-  ,Vcl.Forms
-  ,System.IniFiles
-  ,System.SyncObjs
-  ,System.SysUtils
   {Classes de Negócio}
-  ,Core.Environment
   ,Core.DataBase.Interfaces;
 
 type
@@ -67,7 +66,9 @@ var
 implementation
 
 uses
-  Core.Global;
+  {Classes de Negócio}
+   Core.Global
+  ,Core.Environment;
 
 { TDataBaseConnection }
 
@@ -90,7 +91,7 @@ begin
   except
     on E: Exception do
     begin
-      gEnv.Log.Error(Format('%s | %s #13#10 %s', [Self.UnitName, Self.MethodName(Self), E.Message]));
+      Env.Log.Error(Format('%s | %s #13#10 %s', [Self.UnitName, Self.MethodName(Self), E.Message]));
       raise Exception.Create('The connection to the database could not be opened.'+#13#10 + E.Message);
     end;
   end;
@@ -120,7 +121,7 @@ begin
     except
       on E : Exception do
       begin
-        gEnv.Log.Error(Format('%s | %s #13#10 %s', [Self.UnitName, Self.MethodName(Self), E.Message]));
+        Env.Log.Error(Format('%s | %s #13#10 %s', [Self.UnitName, Self.MethodName(Self), E.Message]));
         raise Exception.Create('The connection to the database could not be closed.' + #13#10 + E.Message);
       end;
     end;
@@ -157,21 +158,21 @@ end;
 
 procedure TDataBaseConnection.LoadConfig;
 var
-  path: String;
-  arqIni: TIniFile;
-  vMessage: String;
+  LPath: String;
+  LArqIni: TIniFile;
+  LMessage: String;
 begin
   try
-    path := StringReplace(ExtractFilePath(Application.ExeName),'bin\', '', [rfReplaceAll]) + 'drivers\FDConnectionDefs.ini';
-    arqIni := TIniFile.Create(path);
+    LPath := StringReplace(ExtractFilePath(Application.ExeName), cDirectoryExec+'\', '', [rfReplaceAll]) + 'Drivers\FDConnectionDefs.ini';
+    LArqIni := TIniFile.Create(LPath);
     try
       FLink := TFDPhysPGDriverLink.Create(nil);
       FLink.Release;
-      FLink.VendorLib := StringReplace(ExtractFilePath(Application.ExeName), 'bin\', '', [rfReplaceAll]) + 'lib\libpq.dll';
+      FLink.VendorLib := StringReplace(ExtractFilePath(Application.ExeName), cDirectoryExec+'\', '', [rfReplaceAll]) + 'Lib\libpq.dll';
 
       FConnection := TFDConnection.Create(nil);
 
-      FConnection.DriverName        := arqIni.ReadString(FAppName, 'DriverID', 'PG');
+      FConnection.DriverName        := LArqIni.ReadString(FAppName, 'DriverID', 'PG');
       FConnection.ConnectionName    := FAppName;
       FConnection.ConnectionDefName := FAppName;
       FConnection.LoginPrompt       := False;
@@ -179,30 +180,30 @@ begin
 
       with (TFDPhysPGConnectionDefParams(FConnection.Params)) do
       begin
-        Port            := arqIni.ReadInteger(FAppName, 'Port', 5432);
-        Server          := arqIni.ReadString(FAppName, 'Server', 'localhost');
-        DriverID        := arqIni.ReadString(FAppName, 'DriverID', '');
-        Database        := arqIni.ReadString(FAppName, 'Database', '');
-        Password        := arqIni.ReadString(FAppName, 'Password', 'postgres');
-        UserName        := arqIni.ReadString(FAppName, 'User_Name', 'postgres');
-        LoginTimeout    := arqIni.ReadInteger(FAppName, 'Timeout', 30);
+        Port            := LArqIni.ReadInteger(FAppName, 'Port', 5432);
+        Server          := LArqIni.ReadString(FAppName, 'Server', 'localhost');
+        DriverID        := LArqIni.ReadString(FAppName, 'DriverID', '');
+        Database        := LArqIni.ReadString(FAppName, 'Database', '');
+        Password        := LArqIni.ReadString(FAppName, 'Password', 'postgres');
+        UserName        := LArqIni.ReadString(FAppName, 'User_Name', 'postgres');
+        LoginTimeout    := LArqIni.ReadInteger(FAppName, 'Timeout', 30);
         ApplicationName := FAppName;
         CharacterSet    := csUTF8;
       end;
 
-      FConnection.Params.UserName := arqIni.ReadString(FAppName, 'User_Name', 'postgres');
-      FConnection.Params.Password := arqIni.ReadString(FAppName, 'Password', 'postgres');
+      FConnection.Params.UserName := LArqIni.ReadString(FAppName, 'User_Name', 'postgres');
+      FConnection.Params.Password := LArqIni.ReadString(FAppName, 'Password', 'postgres');
 
-      gEnv.Log.Info(Self.UnitName + Format(' | Connected to the database %s.', [FConnection.ConnectionName]));
+      Env.Log.Info(Self.UnitName + Format(' | Connected to the database %s.', [FConnection.ConnectionName]));
 //      Self.Connect;
     finally
-      FreeAndNil(arqIni);
+      FreeAndNil(LArqIni);
     end;
   except
     on E: Exception do
     begin
-      vMessage := Self.UnitName + ' | ' + Self.MethodName(Self) + #13#10 + E.Message + #13#10 + 'The application will be finalized.';
-      gEnv.Log.Error(vMessage);
+      LMessage := Self.UnitName + ' | ' + Self.MethodName(Self) + #13#10 + E.Message + #13#10 + 'The application will be finalized.';
+      Env.Log.Error(LMessage);
       raise Exception.Create('The database connection data could not be loaded.' + #13#10 + E.Message);
     end;
   end;

@@ -9,8 +9,9 @@ uses
   {Classes de negócio}
   ,Core.Logs;
 
+
 type
-  TEnvironment = class(TPersistent)
+  TEnvironment = class
   strict private
     FLog: ILog;
   public
@@ -20,6 +21,9 @@ type
 
     property Log: ILog read FLog write FLog;
   end;
+
+  {Função global para utilizar como singleton o objeto Environment}
+  function Env: TEnvironment;
 
 var
   gEnv: TEnvironment;
@@ -39,8 +43,16 @@ begin
   inherited;
 end;
 
+function Env: TEnvironment;
+begin
+  if not Assigned(gEnv) then
+    gEnv := TEnvironment.Create;
+
+  Result := gEnv;
+end;
+
 initialization
-  gEnv := TEnvironment.Create;
+  gEnv := Env;
 
 finalization
   FreeAndNil(gEnv);
