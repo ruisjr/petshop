@@ -1,0 +1,41 @@
+Entidades
+- Cliente
+- Pet
+- Serviço
+- Fornecedor
+- Produto
+- Mensagem
+- Municipio
+- Estado
+- Pais
+- Usuario
+- Forma de pagamento
+- Empresa
+
+Rotinas
+- Cadastro
+- Relatório
+- Agendamento
+- Servico/Produto
+- Orçamento
+- Mensagem automática
+- Pagamentos
+- Empresa
+- Remédios
+- Emissão de Receitas
+- Exames
+- Financeiro
+- Emissão de Documentos Fiscais (NF-E, NFS-E)
+- Anonimização (LGPD)
+
+API
+- Agendamento
+- Pet
+- Receitas
+- Remédios
+- Pessoas 
+- Exames
+
+WhatsApp
+- Envio de lembrete direto no WhatsApp
+- Contato direto pela aplicação 
