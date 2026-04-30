@@ -50,27 +50,19 @@ implementation
 
 { TEmail }
 
-///<sumary>Método por criar a instância da classe na memória</sumary>
-///<remarks>Método responsável por criar a instância da classe na memória.</remarks>
-///<returns>Não há retorno</returns>
+
 constructor TEmail.Create;
 begin
   inherited Create;
   FBody := TStringList.Create;
 end;
 
-///<sumary>Método para remover a instância da classe na memória</sumary>
-///<remarks>Método responsável por eliminar a classe instanciada da memória.</remarks>
-///<returns>Não há retorno</returns>
 destructor TEmail.Destroy;
 begin
   FreeAndNil(FBody);
   inherited;
 end;
 
-///<sumary>Método para enviar o email com as informações informadas</sumary>
-///<remarks>Método responsável por efetivamente organizar as informações e enviar o email.</remarks>
-///<returns>Não há retorno</returns>
 procedure TEmail.Enviar;
 var
   vIdSMTP: TIdSMTP;
@@ -100,7 +92,7 @@ begin
         vIdMessage.Subject := PSubject;
         vIdMessage.From.Name := PFromName;
         vIdMessage.From.Address := PEmailFromAddress;
-        vIdMessage.Recipients.EMailAddresses := 'rui.silva@cooper.coop.br';//PEmailToAddress;
+        vIdMessage.Recipients.EMailAddresses := PEmailToAddress;
 
         Self.ValidarDadosEmail;
 
@@ -127,9 +119,6 @@ begin
   end;
 end;
 
-///<sumary>Método para validar dados básicos do email</sumary>
-///<remarks>Método responsável por validar o preenchimento do usuário, email destinatário e remetente.</remarks>
-///<returns>Não há retorno</returns>
 procedure TEmail.ValidarDadosEmail;
 begin
   if PUserName.IsEmpty or  PPassword.IsEmpty then

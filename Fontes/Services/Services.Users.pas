@@ -3,7 +3,7 @@ unit Services.Users;
 interface
 
 uses
-  Horse;
+   Horse;
 
 implementation
 
@@ -62,5 +62,4 @@ begin
     end
   );
 
-  THorse.Listen(GetPortService);
 end.

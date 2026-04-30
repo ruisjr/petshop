@@ -34,8 +34,11 @@ var
 implementation
 
 uses
+  {Classes de Sistema}
+   Horse
   {Classes de Negócio}
-  Core.Environment;
+  ,Core.Global
+  ,Core.Environment;
 
 
 {$R *.dfm}
@@ -63,6 +66,7 @@ begin
   FEventoParada := TEvent.Create(nil, True, False, '');
   Env.Log.Info('Iniciando serviço.');
   try
+    THorse.Listen(GetPortService);
     Started := True;
     Env.Log.Info('Serviço iniciado com sucesso.');
   except
@@ -80,6 +84,9 @@ begin
   FEventoParada.SetEvent;
 
   FreeAndNil(FEventoParada);
+
+  if THorse.IsRunning then
+    THorse.StopListen;
 
   Stopped := True;
   Env.Log.Info('Serviço parado com sucesso.');
