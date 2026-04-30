@@ -50,6 +50,8 @@ begin
     begin
       LJsonObj := TJSONObject.Create;
       try
+        Env.Log.Info(Req.Body);
+
         LJsonObj.AddPair('response', TJSONBool.Create(True));
         Res.Send(LJsonObj.ToJSON);
         REs.Status(200);

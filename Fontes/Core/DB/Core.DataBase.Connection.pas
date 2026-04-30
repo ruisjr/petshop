@@ -194,8 +194,9 @@ begin
       FConnection.Params.UserName := LArqIni.ReadString(FAppName, 'User_Name', 'postgres');
       FConnection.Params.Password := LArqIni.ReadString(FAppName, 'Password', 'postgres');
 
+      Self.Connect;
+
       Env.Log.Info(Self.UnitName + Format(' | Connected to the database %s.', [FConnection.ConnectionName]));
-//      Self.Connect;
     finally
       FreeAndNil(LArqIni);
     end;
