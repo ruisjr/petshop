@@ -22,7 +22,7 @@ type
     FWhere    : String;
     FOrderBy  : String;
     FGroupBy  : String;
-    FRowNum   : String;
+    FLimit    : String;
     FJoin     : String;
     FSQL      : String;
   public
@@ -46,7 +46,7 @@ type
     function Where(pParameters: TDictionary<String, TValue>): ISQLMaker<T>; overload;
     function OrderBy(pOrder: String): ISQLMaker<T>;
     function GroupBy(pGroup: String): ISQLMaker<T>;
-    function RowNum(pRowNum: String): ISQLMaker<T>;
+    function Limit(pLimit: String): ISQLMaker<T>;
     function Join(pJoin: String): ISQLMaker<T>;
     function SQL(pSQL: String): ISQLMaker<T>;
 
@@ -63,7 +63,7 @@ uses
 constructor TSQLMaker<T>.Create(pInstance: T);
 begin
   FInstance := pInstance;
-  FRowNum := '';
+  FLimit := '';
 end;
 
 function TSQLMaker<T>.Delete(var pSQL: String): ISQLMaker<T>;
@@ -123,12 +123,12 @@ begin
   FJoin  := pJoin;
 end;
 
-function TSQLMaker<T>.RowNum(pRowNum: String): ISQLMaker<T>;
+function TSQLMaker<T>.Limit(pLimit: String): ISQLMaker<T>;
 begin
   Result := Self;
 
-  if not Trim(pRowNum).IsEmpty then
-    FRowNum := pRowNum;
+  if not Trim(pLimit).IsEmpty then
+    FLimit := pLimit;
 end;
 
 class function TSQLMaker<T>.New(pInstance: T): ISQLMaker<T>;
@@ -193,18 +193,12 @@ begin
     if not Trim(FWhere).IsEmpty then
       pSQL := pSQL + ' WHERE ' + FWhere;
 
-    if not FRowNum.IsEmpty then
-    begin
-      if not Trim(FWhere).IsEmpty then
-        pSQL := pSQL + ' AND ROWNUM <= ' + FRowNum
-      else
-        pSQL := pSQL + ' WHERE ROWNUM <= ' + FRowNum;
-    end;
-
     if not Trim(FGroupBy).IsEmpty then
       pSQL := pSQL + ' GROUP BY ' + FGroupBy;
     if not Trim(FOrderBy).IsEmpty then
       pSQL := pSQL + ' ORDER BY ' + FOrderBy;
+    if not Trim(FLimit).IsEmpty then
+      pSQL := pSQL + ' LIMIT ' + FLimit;
   end
   else
     pSQL := FSQL;
@@ -233,16 +227,12 @@ begin
     pSQL := pSQL + ' ' + FJoin + ' ';
   if not Trim(FWhere).IsEmpty then
     pSQL := pSQL + ' WHERE ' + FWhere;
-
-  if not Trim(FWhere).IsEmpty then
-    pSQL := pSQL + 'AND ROWNUM <= ' + FRowNum
-  else
-    pSQL := pSQL + 'ROWNUM <= ' + FRowNum;
-
   if not Trim(FGroupBy).IsEmpty then
     pSQL := pSQL + ' GROUP BY ' + FGroupBy;
   if not Trim(FOrderBy).IsEmpty then
     pSQL := pSQL + ' ORDER BY ' + FOrderBy;
+  if not Trim(FLimit).IsEmpty then
+    pSQL := pSQL + ' LIMIT ' + FLimit;
 end;
 
 function TSQLMaker<T>.SQL(pSQL: String): ISQLMaker<T>;

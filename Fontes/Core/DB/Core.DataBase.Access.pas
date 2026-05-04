@@ -24,20 +24,22 @@ type
   TDataBaseDAO<T: class, constructor> = class(TInterfacedObject, IDataBaseDAO<T>)
   protected
     FEntity: T;
+    FForm: TForm;
     FSQL: String;
     FOrder: String;
     FGroup: String;
-    FRowNum: String;
+    FLimit: String;
     FWhere: String;
     FFields: String;
     FList: TObjectList<T>;
     FParameters: TDictionary<String, TValue>;
     FDataSource: TDataSource;
-  private
+  strict private
     FQuery: IDataBaseQuery<T>;
 
     {Procedures}
     procedure Clear;
+    procedure OnDataChange(Sender: TObject; Field: TField);
   public
     {Construtores e Destrutores}
     constructor Create; overload;
@@ -61,13 +63,14 @@ type
     function SQL(const pSQL: String): IDataBaseDAO<T>;
     function GroupBy(const pField: String): IDataBaseDAO<T>;
     function OrderBy(const pField: String): IDataBaseDAO<T>;
-    function RowNum(const pRowNum: Integer) : IDataBaseDAO<T>;
-    function Fields(const pFields: String) : IDataBaseDAO<T>;
+    function Limit(const pLimit: Integer): IDataBaseDAO<T>;
+    function Fields(const pFields: String): IDataBaseDAO<T>;
     function Where(const pField: String; const pOperatorType: TOperatorType; const pValue: TValue): IDataBaseDAO<T>;
     function WhereAnd(const pField: String; const pOperatorType: TOperatorType; const pValue: TValue): IDataBaseDAO<T>;
 
-    function ToList: TObjectList<T>;
+    function ToList(const pRecMax: Integer = 0; const pRecSkip: Integer = 0): TObjectList<T>;
     function First: T;
+    function Bind(const pForm: TForm): IDataBaseDAO<T>;
   end;
 
 implementation
@@ -94,7 +97,7 @@ procedure TDataBaseDAO<T>.Clear;
 begin
   FOrder := '';
   FGroup := '';
-  FRowNum := '';
+  FLimit := '';
   FWhere := '';
   FFields := '';
   FParameters.Clear;
@@ -102,8 +105,8 @@ end;
 
 constructor TDataBaseDAO<T>.Create(const pEntity: T);
 begin
-  Self.Create;
   FEntity := pEntity;
+  Self.Create;
 end;
 
 function TDataBaseDAO<T>.DataSet: TDataSet;
@@ -117,6 +120,7 @@ begin
     Result := Self;
     FDataSource := pDataSource;
     FDataSource.DataSet := TDataSet(FQuery.DataSet);
+    FDataSource.OnDataChange := OnDataChange;
   except
     on E: Exception do
     begin
@@ -165,11 +169,21 @@ begin
   inherited;
 end;
 
-function TDataBaseDAO<T>.RowNum(const pRowNum: Integer): IDataBaseDAO<T>;
+function TDataBaseDAO<T>.Limit(const pLimit: Integer): IDataBaseDAO<T>;
 begin
   Result := Self;
-  FRowNum := pRowNum.ToString();
+  FLimit := pLimit.ToString();
 end;
+
+procedure TDataBaseDAO<T>.OnDataChange(Sender: TObject; Field: TField);
+begin
+  if (FList.Count > 0) and (FDataSource.DataSet.RecNo - 1 <= FList.Count) then
+  begin
+    if Assigned(FForm) then
+      TDataBaseRtti<T>.New(nil).BindEntityToForm(FForm, FList[FDataSource.DataSet.RecNo - 1]);
+  end;
+end;
+
 
 function TDataBaseDAO<T>.SQL(const pSQL: String): IDataBaseDAO<T>;
 begin
@@ -213,9 +227,9 @@ begin
     TSQLMaker<T>.New(FEntity)
       .Fields(FFields)
       .Where(FParameters)
-      .RowNum('1')
       .GroupBy(FGroup)
       .OrderBy(FOrder)
+      .Limit('1')
     .Select(vSQL);
   end
   else
@@ -253,6 +267,12 @@ begin
     FreeAndNil(FEntity);
 end;
 
+function TDataBaseDAO<T>.Bind(const pForm: TForm): IDataBaseDAO<T>;
+begin
+  Result := Self;
+  FForm := pForm;
+end;
+
 function TDataBaseDAO<T>.GroupBy(const pField: String): IDataBaseDAO<T>;
 begin
   Result := Self;
@@ -282,16 +302,16 @@ begin
   end;
 end;
 
-function TDataBaseDAO<T>.ToList: TObjectList<T>;
+function TDataBaseDAO<T>.ToList(const pRecMax: Integer; const pRecSkip: Integer): TObjectList<T>;
 var
   vSQL: String;
 begin
   TSQLMaker<T>.New(FEntity)
     .Fields(FFields)
     .Where(FParameters)
-    .RowNum(FRowNum)
     .GroupBy(FGroup)
     .OrderBy(FOrder)
+    .Limit(FLimit)
   .Select(vSQL);
 
   FQuery.DataSet.DisableControls;
@@ -299,6 +319,12 @@ begin
     FQuery.SQL.Clear;
     FQuery.SQL.Add(vSQL);
     FQuery.FillParameter(FParameters);
+
+    if (pRecMax > 0) then
+      FQuery.SetRecsMax(pRecMax);
+    if (pRecSkip > 0) and  (pRecMax > 0) then
+      FQuery.SetRecsSkip(pRecSkip);
+
     FQuery.Open;
 
     Result := TObjectList<T>.Create;

@@ -46,10 +46,11 @@ type
     function SQL(const pSQL: String): IDataBaseDAO<T>;
     function OrderBy(const pField: String): IDataBaseDAO<T>;
     function GroupBy(const pField: String): IDataBaseDAO<T>;
-    function RowNum(const pRowNum: Integer) :IDataBaseDAO<T>;
+    function Limit(const pLimit: Integer) :IDataBaseDAO<T>;
 
     function First: T;
-    function ToList: TObjectList<T>;
+    function ToList(const pRecMax: Integer = 0; const pRecSkip: Integer = 0): TObjectList<T>;
+    function Bind(const pForm: TForm): IDataBaseDAO<T>;
   end;
 
   ISQLMaker<T> = interface
@@ -68,7 +69,7 @@ type
     function Where(pParameters: TDictionary<String, TValue>): ISQLMaker<T>; overload;
     function OrderBy(pOrder: String): ISQLMaker<T>;
     function GroupBy(pGroup: String): ISQLMaker<T>;
-    function RowNum(pRowNum: String): ISQLMaker<T>;
+    function Limit(pLimit: String): ISQLMaker<T>;
     function Join(pJoin: String): ISQLMaker<T>;
     function SQL(pSQL: String): ISQLMaker<T>;
   end;
@@ -87,6 +88,8 @@ type
     procedure FreeMemory;
     procedure Next;
     procedure First;
+    procedure SetRecsMax(const pValue: Integer);
+    procedure SetRecsSkip(const pValue: Integer);
     procedure FillParameter(pParameters: TDictionary<String, TValue>); overload;
     procedure FillParameter(pEntity: T; pInsert: Boolean = False); overload;
   end;
@@ -107,6 +110,8 @@ type
     function DictionaryFields(var pDictionary : TDictionary<string, variant>) : IDataBaseRtti<T>;
     function DictionaryTypeFields(var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
     function DictionaryTypeFields(const pParameters: TDictionary<string, TValue>; var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
+    function BindFormToEntity(pForm : TForm; var pEntity: T): IDataBaseRtti<T>;
+    function BindEntityToForm(pForm : TForm; const pEntity: T): IDataBaseRtti<T>;
   end;
 
 implementation

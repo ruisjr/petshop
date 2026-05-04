@@ -5,6 +5,8 @@ interface
 uses
   //Classes de sistema
    Data.Db
+  ,AdvEdit
+  ,Advcombo
   ,Vcl.Forms
   ,System.Rtti
   ,System.JSON
@@ -13,6 +15,7 @@ uses
   ,System.Classes
   ,System.SysUtils
   ,System.Variants
+  ,AdvOfficeButtons
   ,System.Generics.Collections
   //Classes de negócio
   ,Core.DataBase.Types
@@ -31,7 +34,12 @@ type
     FModeInsert: Boolean;
 
     function _CreateObjectByName(const AClassName: string): T;
-    function _FloatFormat( pValue: String ): Currency;
+    function _FloatFormat(pValue: String): Currency;
+    function _BindValueToComponent(pComponent: TComponent; pValue : Variant): IDataBaseRtti<T>;
+    function _BindValueToProperty(pEntity: T; pProperty: TRttiProperty; pValue : TValue): IDataBaseRtti<T>;
+    function _GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
+    function _GetRttiPropertyValue(pEntity: T; pPropertyName: String): Variant;
+    function _GetComponentToValue(pComponent: TComponent): TValue;
   public
     {Construtores e Destrutores}
     constructor Create(pInstance: T);
@@ -45,7 +53,7 @@ type
     function Sequence(var pSequence: String): IDataBaseRtti<T>;
     function ClassName(var pClassName: String): IDataBaseRtti<T>;
     function Fields(var pFields: String): IDataBaseRtti<T>;
-    function FieldsInsert (var aFields: String): IDataBaseRtti<T>;
+    function FieldsInsert(var aFields: String): IDataBaseRtti<T>;
     function Param(var pParam: String): IDataBaseRtti<T>;
     function Where(var pWhere: String): IDataBaseRtti<T>;
     function Update(var pUpdate: String): IDataBaseRtti<T>;
@@ -55,8 +63,10 @@ type
     function DataSetToEntityList(vDataSet: TDataSet; var vList: TObjectList<T>): IDataBaseRtti<T>;
 
     function DictionaryFields(var pDictionary: TDictionary<string, variant>): IDataBaseRtti<T>;
-    function DictionaryTypeFields(var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
     function DictionaryTypeFields(const pParameters: TDictionary<string, TValue>; var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
+    function DictionaryTypeFields(var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
+    function BindFormToEntity(pForm : TForm; var pEntity: T): IDataBaseRtti<T>;
+    function BindEntityToForm(pForm : TForm; const pEntity: T): IDataBaseRtti<T>;
   end;
 
 
@@ -67,6 +77,49 @@ Uses
   Vcl.StdCtrls;
 
 { TDataBaseRtti<T> }
+
+function TDataBaseRtti<T>.BindEntityToForm(pForm: TForm; const pEntity: T): IDataBaseRtti<T>;
+var
+  vTypRtti: TRttiType;
+  vPrpRtti: TRttiField;
+  vCtxRtti: TRttiContext;
+begin
+  Result := Self;
+
+  vCtxRtti := TRttiContext.Create;
+  try
+    vTypRtti := vCtxRtti.GetType(pForm.ClassInfo);
+    for vPrpRtti in vTypRtti.GetFields do
+    begin
+      if vPrpRtti.Has<Bind> then
+        _BindValueToComponent(pForm.FindComponent(vPrpRtti.Name), _GetRttiPropertyValue(pEntity, vPrpRtti.GetAttribute<Bind>.Field));
+    end;
+  finally
+    vCtxRtti.Free;
+  end;
+end;
+
+function TDataBaseRtti<T>.BindFormToEntity(pForm: TForm; var pEntity: T): IDataBaseRtti<T>;
+var
+  vTypRtti: TRttiType;
+  vPrpRtti: TRttiField;
+  vCtxRtti: TRttiContext;
+begin
+  Result := Self;
+  vCtxRtti := TRttiContext.Create;
+  try
+    vTypRtti := vCtxRtti.GetType(pForm.ClassInfo);
+    for vPrpRtti in vTypRtti.GetFields do
+    begin
+      if vPrpRtti.Has<Bind> then
+      begin
+        _BindValueToProperty(pEntity, _GetRttiProperty(pEntity, vPrpRtti.GetAttribute<Bind>.Field), _GetComponentToValue(pForm.FindComponent(vPrpRtti.Name)));
+      end;
+    end;
+  finally
+    vCtxRtti.Free;
+  end;
+end;
 
 function TDataBaseRtti<T>.ClassName(var pClassName: String): IDataBaseRtti<T>;
 var
@@ -609,22 +662,10 @@ begin
 //      if vPrpRtti.IsAutoInc then
 //        Continue;
 
-      if FModeInsert then
+      if FModeInsert and vPrpRtti.IsSequence then
       begin
-        if vPrpRtti.IsSequence then
-        begin
-          pParam := pParam + vPrpRtti.Sequence + '.nextval,';
-          Continue;
-        end;
-
-        if vPrpRtti.IsDBDateTime then
-        begin
-          if (vPrpRtti.GetValue(Pointer(FInstance)).AsVariant = 0) then
-          begin
-            pParam := pParam + vPrpRtti.DBDateTime + ', ';
-            Continue;
-          end;
-        end;
+        pParam := pParam + Format('nextval(%s), ', [QuotedStr(vPrpRtti.Sequence)]);
+        Continue;
       end;
 
       if vPrpRtti.IsEnum then
@@ -747,8 +788,7 @@ begin
 //        Continue;
       if vPrpRtti.IsSequence then
       begin
-        pValues := pValues + 'nextval('''+ vPrpRtti.Sequence +'''), ';
-        pValues := pValues + Format('%s.nextval, ', [vPrpRtti.Sequence]);
+        pValues := pValues + Format('nextval(%s), ', [QuotedStr(vPrpRtti.Sequence)]);
         Continue;
       end;
 
@@ -799,12 +839,138 @@ begin
   end;
 end;
 
+function TDataBaseRtti<T>._BindValueToComponent(pComponent: TComponent; pValue: Variant): IDataBaseRtti<T>;
+begin
+  if VarIsNull(pValue) then
+      exit;
+   {
+  if pComponent is TAdvEdit then
+      (pComponent as TAdvEdit).Text := pValue;
+
+  if pComponent is TAdvComboBox then
+      (pComponent as TAdvComboBox).ItemIndex := (pComponent as TAdvComboBox).Items.IndexOf(pValue);
+
+  if pComponent is TRadioGroup then
+      (pComponent as TRadioGroup).ItemIndex := (pComponent as TRadioGroup).Items.IndexOf(aValue);
+
+  if pComponent is TShape then
+      (pComponent as TShape).Brush.Color := aValue;
+
+  //DateControls
+  if pComponent is TAdvDateTimePicker then
+      (pComponent as TAdvDateTimePicker).Date := aValue;
+
+  if pComponent is TDateEdit then
+      (pComponent as TDateEdit).Date := aValue;
+
+  if pComponent is TAdvOfficeCheckBox then
+      (pComponent as TAdvOfficeCheckBox).Checked := aValue;
+      (pComponent as TAdvOfficeCheckBox).IsChecked := aValue;
+
+  if pComponent is TTrackBar then
+      (pComponent as TTrackBar).Position := aValue;
+      }
+end;
+
+function TDataBaseRtti<T>._BindValueToProperty(pEntity: T; pProperty: TRttiProperty; pValue: TValue): IDataBaseRtti<T>;
+begin
+  case pProperty.PropertyType.TypeKind of
+    tkUnknown: ;
+    tkInteger:
+      pProperty.SetValue(Pointer(pEntity), StrToInt(pValue.ToString));
+    tkChar: ;
+    tkEnumeration: ;
+    tkFloat:
+    begin
+      if (pValue.TypeInfo    = TypeInfo(TDate))
+         or (pValue.TypeInfo = TypeInfo(TTime))
+         or (pValue.TypeInfo = TypeInfo(TDateTime)) then
+      begin
+        pProperty.SetValue(Pointer(pEntity), StrToDateTime(pValue.ToString))
+      end
+      else
+        pProperty.SetValue(Pointer(pEntity), StrToFloat(pValue.ToString));
+    end;
+    tkSet: ;
+    tkClass: ;
+    tkMethod: ;
+    tkString, tkWChar, tkLString, tkWString, tkVariant, tkUString:
+      pProperty.SetValue(Pointer(pEntity), pValue);
+    tkArray: ;
+    tkRecord: ;
+    tkInterface: ;
+    tkInt64:
+      pProperty.SetValue(Pointer(pEntity), pValue.Cast<Int64>);
+    tkDynArray: ;
+    tkClassRef: ;
+    tkPointer: ;
+    tkProcedure: ;
+  else
+    pProperty.SetValue(Pointer(pEntity), pValue);
+  end;
+end;
+
 function TDataBaseRtti<T>._FloatFormat(pValue: String): Currency;
 begin
   while Pos('.', pValue) > 0 do
     delete(pValue,Pos('.', pValue),1);
 
   Result := StrToCurr(pValue);
+end;
+
+function TDataBaseRtti<T>._GetComponentToValue(pComponent: TComponent): TValue;
+begin
+  if pComponent is TEdit then
+    Result := TValue.FromVariant((pComponent as TEdit).Text);
+
+  if pComponent is TAdvEdit then
+    Result := TValue.FromVariant((pComponent as TAdvEdit).Text);
+
+  if pComponent is TAdvComboBox then
+    Result := TValue.FromVariant((pComponent as TAdvComboBox).Items[(pComponent as TAdvComboBox).ItemIndex]);
+
+  if pComponent is TRadioGroup then
+    Result := TValue.FromVariant((pComponent as TRadioGroup).Items[(pComponent as TRadioGroup).ItemIndex]);
+
+  if pComponent is TShape then
+    Result := TValue.FromVariant((pComponent as TShape).Brush.Color);
+
+  if pComponent is TAdvOfficeCheckBox then
+    Result := TValue.FromVariant((pComponent as TAdvOfficeCheckBox).Checked);
+
+//  if pComponent is TTrackBar then
+//    Result := TValue.FromVariant((pComponent as TTrackBar).Position);
+
+//  if pComponent is TAdvDateTimePicker then
+//    Result := TValue.FromVariant((pComponent as TAdvDateTimePicker).DateTime);
+
+//  if pComponent is TDateEdit then
+//    Result := TValue.FromVariant((pComponent as TDateEdit).DateTime);
+end;
+
+function TDataBaseRtti<T>._GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
+var
+  vTypRttiEntity: TRttiType;
+  vCtxRttiEntity: TRttiContext;
+begin
+  vCtxRttiEntity := TRttiContext.Create;
+  try
+    vTypRttiEntity := vCtxRttiEntity.GetType(pEntity.ClassInfo);
+    Result := vTypRttiEntity.GetProperty(pPropertyName);
+
+    if not Assigned(Result) then
+      Result := vTypRttiEntity.GetPropertyFromAttribute<DBField>(pPropertyName);
+
+    if not Assigned(Result) then
+      raise EDataBaseRtti.Create('Property ' + pPropertyName + ' not found!');
+  finally
+    vCtxRttiEntity.Free;
+  end;
+end;
+
+function TDataBaseRtti<T>._GetRttiPropertyValue(pEntity: T; pPropertyName: String): Variant;
+begin
+  Result := _GetRttiProperty(pEntity, pPropertyName).GetValue(Pointer(pEntity)).AsVariant;
 end;
 
 end.

@@ -4,8 +4,8 @@
     <Transaction>2025/09/26 00:20:36.000.850,=C:\Users\Mega\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
     <Transaction>2025/10/22 00:16:33.000.338,=C:\Users\Mega\OneDrive\PessoalDrive\Documentos\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
     <Transaction>2026/04/28 16:15:53.000.213,=C:\Users\Mega\OneDrive\PessoalDrive\Documentos\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2026/04/28 16:17:22.000.280,C:\Users\Mega\OneDrive\PessoalDrive\Documentos\Embarcadero\Studio\Projects\Unit1.dfm=C:\Sistemas\PetShop\Fontes\Server\SrvPetShopWindows.dfm</Transaction>
     <Transaction>2026/04/28 16:17:22.000.280,C:\Users\Mega\OneDrive\PessoalDrive\Documentos\Embarcadero\Studio\Projects\Unit1.pas=C:\Sistemas\PetShop\Fontes\Server\SrvPetShopWindows.pas</Transaction>
+    <Transaction>2026/04/28 16:17:22.000.280,C:\Users\Mega\OneDrive\PessoalDrive\Documentos\Embarcadero\Studio\Projects\Unit1.dfm=C:\Sistemas\PetShop\Fontes\Server\SrvPetShopWindows.dfm</Transaction>
     <Transaction>2026/04/28 16:17:38.000.576,C:\Users\Mega\OneDrive\PessoalDrive\Documentos\Embarcadero\Studio\Projects\Project1.dproj=C:\Sistemas\PetShop\Projeto\SrvPetShop.dproj</Transaction>
     <Transaction>2026/04/28 16:27:05.000.657,=C:\Sistemas\PetShop\Fontes\Core\Core.Logs.pas</Transaction>
     <Transaction>2026/04/28 17:01:48.000.161,=C:\Sistemas\PetShop\Projeto\Unit1.pas</Transaction>
@@ -18,14 +18,14 @@
     <Transaction>2026/04/28 17:14:01.000.283,=C:\Sistemas\PetShop\Fontes\Core\Core.Servico.pas</Transaction>
     <Transaction>2026/04/28 17:14:01.000.263,=C:\Sistemas\PetShop\Fontes\Core\Core.Global.pas</Transaction>
     <Transaction>2026/04/28 17:14:18.000.383,=C:\Sistemas\PetShop\Fontes\Core\DB\Interfaces\Core.DataBase.Interfaces.pas</Transaction>
-    <Transaction>2026/04/28 17:14:30.000.831,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.QueryBuilder.pas</Transaction>
     <Transaction>2026/04/28 17:14:30.000.806,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.Access.pas</Transaction>
+    <Transaction>2026/04/28 17:14:30.000.831,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.QueryBuilder.pas</Transaction>
     <Transaction>2026/04/28 17:14:30.000.853,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.RttiHelper.pas</Transaction>
-    <Transaction>2026/04/28 17:14:30.000.886,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.Types.pas</Transaction>
     <Transaction>2026/04/28 17:14:30.000.863,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.SQLAttributes.pas</Transaction>
+    <Transaction>2026/04/28 17:14:30.000.886,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.Types.pas</Transaction>
     <Transaction>2026/04/28 17:14:30.000.842,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.Rtti.pas</Transaction>
-    <Transaction>2026/04/28 17:14:30.000.816,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.Connection.pas</Transaction>
     <Transaction>2026/04/28 17:14:30.000.875,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.SQLMaker.pas</Transaction>
+    <Transaction>2026/04/28 17:14:30.000.816,=C:\Sistemas\PetShop\Fontes\Core\DB\Core.DataBase.Connection.pas</Transaction>
     <Transaction>2026/04/28 17:14:44.000.480,=C:\Sistemas\PetShop\Fontes\Core\Entidades\Core.Entidades.CustomAttributes.pas</Transaction>
     <Transaction>2026/04/28 17:14:44.000.498,=C:\Sistemas\PetShop\Fontes\Core\Entidades\Core.Entidades.ModelBase.pas</Transaction>
     <Transaction>2026/04/28 17:25:41.000.829,=C:\Sistemas\PetShop\Fontes\Core\Core.Thread.pas</Transaction>

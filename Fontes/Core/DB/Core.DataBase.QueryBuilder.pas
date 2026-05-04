@@ -24,7 +24,7 @@ type
     FWhereClause: TStrings;
     FParams: TParams;
     FQuery: TFDQuery;
-  public
+  protected
     constructor Create;
 
     {Functions}
@@ -44,6 +44,8 @@ type
     procedure FreeMemory;
     procedure Next;
     procedure First;
+    procedure SetRecsMax(const pValue: Integer);
+    procedure SetRecsSkip(const pValue: Integer);
     procedure FillParameter(pParameters: TDictionary<String, TValue>); overload;
     procedure FillParameter(pInstance: T; pInsert: Boolean = False); overload;
   end;
@@ -59,9 +61,11 @@ begin
 
   FQuery := TFDQuery.Create(nil);
   FQuery.Connection := vgDBConnection.GetConnection;
+
+  Fquery.UpdateOptions.ReadOnly := True;
+  FQuery.FetchOptions.Mode := fmAll;
   FQuery.FetchOptions.RowsetSize := 25;
   FQuery.FetchOptions.Unidirectional := True;
-  FQuery.FetchOptions.Mode := fmOnDemand;
 end;
 
 function TQueryBuilder<T>.DataSet: TDataSet;
@@ -221,6 +225,16 @@ end;
 function TQueryBuilder<T>.Select(var pSQL: String): IDataBaseQuery<T>;
 begin
   Result := Self;
+end;
+
+procedure TQueryBuilder<T>.SetRecsMax(const pValue: Integer);
+begin
+  FQuery.FetchOptions.RecsMax := pValue;
+end;
+
+procedure TQueryBuilder<T>.SetRecsSkip(const pValue: Integer);
+begin
+  FQuery.FetchOptions.RecsSkip := (pValue - 1) * FQuery.FetchOptions.RecsMax;
 end;
 
 function TQueryBuilder<T>.SQL: TStrings;

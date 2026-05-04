@@ -2,64 +2,76 @@ unit Services.Users;
 
 interface
 
-uses
-   Horse;
+type
+  TServiceUsuario = class
+  strict private
+  public
+    function GetUsuario(const id: Integer): String;
+    function GetUsuarios(): String;
+  end;
 
 implementation
 
 uses
   {Classes de Sistema}
    System.JSON
+  ,Rest.Json
   ,System.SysUtils
+  ,System.Generics.Collections
   {Classes de Negócio}
-  ,Core.Global
+  ,Entidade.Usuario
+  ,Core.Rest.JsonHelper
+  ,Core.DataBase.Types
+  ,Core.DataBase.Interfaces
+  ,Core.DataBase.Access
   ,Core.Environment;
 
 
+
+{ TServiceUsuario }
+
+function TServiceUsuario.GetUsuario(const id: Integer): String;
+var
+  LUsuario: TUsuario;
+  LDAO: IDataBaseDAO<TUsuario>;
 begin
-  THorse.Get('/ping',
-    procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
-    begin
-      Res.Send('{"response": true}');
-      Res.Status(200);
-      Env.Log.Debug('Endpoint: /ping | response: {"response": true}');
-    end
-  );
-
-  THorse.Get('/users',
-    procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
-    var
-      LJsonObj: TJSONObject;
-    begin
-      LJsonObj := TJSONObject.Create;
-      try
-        LJsonObj.AddPair('response', TJSONBool.Create(True));
-        Res.Send(LJsonObj.ToJSON);
-        REs.Status(200);
-        Env.Log.Debug('Endpoint: /users | response: '+LJsonObj.ToJSON);
-      finally
-        FreeAndNil(LJsonObj);
+  LDAO := TDataBaseDAO<TUsuario>.Create;
+  try
+    try
+      LUsuario := LDAO.Where('id', OtEqual, id).First;
+      Result := TJson.ObjectToJsonObject(LUsuario).ToJSON;
+    except
+      on E: Exception do
+      begin
+        Env.Log.Error(E.Message);
+        raise Exception.Create('Error: Não foi possível recuperar o usuário da base de dados.');
       end;
-    end
-  );
+    end;
+  finally
+    LDAO.FreeMemory;
+  end;
+end;
 
-  THorse.Post('/user',
-    procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
-    var
-      LJsonObj: TJSONObject;
-    begin
-      LJsonObj := TJSONObject.Create;
-      try
-        Env.Log.Info(Req.Body);
-
-        LJsonObj.AddPair('response', TJSONBool.Create(True));
-        Res.Send(LJsonObj.ToJSON);
-        REs.Status(200);
-        Env.Log.Debug('Endpoint: /user | response: '+LJsonObj.ToJSON);
-      finally
-        FreeAndNil(LJsonObj);
+function TServiceUsuario.GetUsuarios(): String;
+var
+  LUsuarioList: TObjectList<TUsuario>;
+  LDAO: IDataBaseDAO<TUsuario>;
+begin
+  LDAO := TDataBaseDAO<TUsuario>.Create;
+  try
+    try
+      LUsuarioList := LDAO.ToList(50, 1);
+      Result := TJson.ObjectListToString<TUsuario>(LUsuarioList);
+    except
+      on E: Exception do
+      begin
+        Env.Log.Error(E.Message);
+        raise Exception.Create('Error: Não foi possível recuperar usu[arios da base de dados.');
       end;
-    end
-  );
+    end;
+  finally
+    LDAO.FreeMemory;
+  end;
+end;
 
 end.

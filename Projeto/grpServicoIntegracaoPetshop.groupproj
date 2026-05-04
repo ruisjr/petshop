@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{24C31010-2995-4982-BE5D-7097D9FF59A7}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="SrvPetShop.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="AppPetShop.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="SrvPetShop">
+        <MSBuild Projects="SrvPetShop.dproj"/>
+    </Target>
+    <Target Name="SrvPetShop:Clean">
+        <MSBuild Projects="SrvPetShop.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SrvPetShop:Make">
+        <MSBuild Projects="SrvPetShop.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="AppPetShop">
+        <MSBuild Projects="AppPetShop.dproj"/>
+    </Target>
+    <Target Name="AppPetShop:Clean">
+        <MSBuild Projects="AppPetShop.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AppPetShop:Make">
+        <MSBuild Projects="AppPetShop.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="SrvPetShop;AppPetShop"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="SrvPetShop:Clean;AppPetShop:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="SrvPetShop:Make;AppPetShop:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

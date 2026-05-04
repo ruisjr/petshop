@@ -4,6 +4,7 @@ interface
 
 Uses
    AnsiStrings
+  ,System.Hash
   ,Vcl.ComCtrls
   ,Vcl.Graphics
   ,Winapi.UrlMon
@@ -12,6 +13,7 @@ Uses
   ,Winapi.Windows
   ,System.SysUtils
   ,Vcl.Imaging.JPEG
+  ,System.NetEncoding
   ,Vcl.Imaging.PNGImage;
 
 function ConcederAcessoPastaRede(RemotePath, UserName, Password : PAnsiChar; vGeraRaise: Boolean = False): Boolean;
@@ -22,7 +24,16 @@ function ObterVersaoAplicacao(pPath: String): String;
 function ObterUsuarioWindows: String;
 function ObterNomeMaquina: String;
 function GetIP: String;
+function Split(pDelimiter: Char; pValue: String; pLeft: Boolean = True): String;
 
+{Codificação e Decodificação}
+function GetEncodeBase64(const pValue: String): String;
+function GetDecodeBase64(const pValue: String): String;
+function GetHashMD5String(const pValue: String): String;
+
+
+const
+    cKey = 'RuiGiovannaNatã201019821987';
 
 implementation
 
@@ -261,6 +272,62 @@ begin
     Result := Format('%d.%d.%d.%d', [Byte(h_addr^[0]), Byte(h_addr^[1]), Byte(h_addr^[2]), Byte(h_addr^[3])]);
   end;
   WSACleanup;
+end;
+
+function Split(pDelimiter: Char; pValue: String; pLeft: Boolean = True): String;
+var
+  vListString: TStringList;
+begin
+  if pValue.IsEmpty then
+    Exit('');
+
+  vListString := TStringList.Create;
+  try
+    vListString.Clear;
+    vListString.Delimiter       := pDelimiter;
+    vListString.StrictDelimiter := True; // Requires D2006 or newer.
+    vListString.DelimitedText   := pValue;
+
+    if pLeft then
+      Result := vListString[0].Trim
+    else if vListString.Count > 1 then
+      Result := vListString[1].Trim
+    else
+      Result := vListString[0].Trim;
+  finally
+    FreeAndNil(vListString);
+  end;
+end;
+
+function GetEncodeBase64(const pValue: String): String;
+var
+  vBase64: TBase64Encoding;
+begin
+  vBase64 := TBase64Encoding.Create(0);
+  try
+    Result := vBase64.Encode(pValue + ' || ' + cKey);
+  finally
+    FreeAndNil(vBase64);
+  end;
+end;
+
+function GetDecodeBase64(const pValue: String): String;
+var
+  vBase64: TNetEncoding;
+  vDecode: String;
+begin
+  vBase64 := TNetEncoding.Create;
+  try
+    vDecode := vBase64.Base64.Decode(pvalue);
+    Result := Split('|', vDecode);
+  finally
+    FreeAndNil(vBase64);
+  end;
+end;
+
+function GetHashMD5String(const pValue: String): String;
+begin
+  Result := THashMD5.GetHashString(pValue);
 end;
 
 end.
