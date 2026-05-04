@@ -26,7 +26,8 @@ uses
   Controller.User in '..\Fontes\Controllers\Controller.User.pas',
   Entidade.Usuario in '..\Fontes\Entidades\Entidade.Usuario.pas',
   DTO.Usuario in '..\Fontes\DTOs\DTO.Usuario.pas',
-  Core.Rest.JsonHelper in '..\Fontes\Core\Core.Rest.JsonHelper.pas';
+  Core.Rest.JsonHelper in '..\Fontes\Core\Core.Rest.JsonHelper.pas',
+  Controller.Base in '..\Fontes\Controllers\Controller.Base.pas';
 
 {$R *.res}
 

@@ -22,7 +22,9 @@ uses
   Core.Entidades.CustomAttributes in '..\Fontes\Core\Entidades\Core.Entidades.CustomAttributes.pas',
   Core.Entidades.ModelBase in '..\Fontes\Core\Entidades\Core.Entidades.ModelBase.pas',
   Core.Thread in '..\Fontes\Core\Core.Thread.pas',
-  Services.Users in '..\Fontes\Services\Services.Users.pas';
+  Services.Users in '..\Fontes\Services\Services.Users.pas',
+  Entidade.Usuario in '..\Fontes\Entidades\Entidade.Usuario.pas',
+  Core.Rest.JsonHelper in '..\Fontes\Core\Core.Rest.JsonHelper.pas';
 
 {$R *.RES}
 

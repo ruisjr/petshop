@@ -3,7 +3,19 @@ unit Controller.User;
 interface
 
 uses
-  System.SysUtils;
+  {Classes de Sistema}
+   Horse
+  ,Horse.Commons
+  ,System.SysUtils
+  {Classes de Negócio}
+  ,Controller.Base;
+
+type
+  TControllerUser = class(TControllerBase)
+  public
+    procedure DoUser(Req: THorseRequest; Res: THorseResponse);
+    procedure DoUsers(Req: THorseRequest; Res: THorseResponse);
+  end;
 
 procedure Registry;
 
@@ -11,13 +23,13 @@ implementation
 
 uses
   {Classes de Sistema}
-   Horse
-  ,Services.Users
-  ,System.JSON;
+   System.JSON
+  ,Services.Users;
 
-procedure DoUser(Req: THorseRequest; Res: THorseResponse);
+procedure TControllerUser.DoUser(Req: THorseRequest; Res: THorseResponse);
 var
   LBody: TJsonObject;
+  LMsg: string;
   LService: TServiceUsuario;
 begin
   LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
@@ -31,16 +43,16 @@ begin
     try
       Res.Send(LService.GetUsuario(LBody.GetValue<Integer>('id')));
     except
-      raise EHorseException.New.Error('Ocorreu erro ao processar a solicitação').Status(THTTPStatus.BadRequest);
+      on E: Exception do
+        Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
     end;
   finally
     FreeAndNil(LService);
   end;
 end;
 
-procedure DoUsers(Req: THorseRequest; Res: THorseResponse);
+procedure TControllerUser.DoUsers(Req: THorseRequest; Res: THorseResponse);
 var
-  LBody: TJsonObject;
   LService: TServiceUsuario;
 begin
   LService := TServiceUsuario.Create;
@@ -48,7 +60,8 @@ begin
     try
       Res.Send(LService.GetUsuarios());
     except
-      raise EHorseException.New.Error('Ocorreu erro ao processar a solicitação').Status(THTTPStatus.BadRequest);
+      on E: Exception do
+        Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
     end;
   finally
     FreeAndNil(LService);
@@ -56,9 +69,16 @@ begin
 end;
 
 procedure Registry;
+var
+  LController: TControllerUser;
 begin
-  THorse.Get('/user', DoUser);
-  THorse.Get('/users', DoUsers);
+  LController := TControllerUser.Create;
+  try
+    THorse.Get('/user', LController.DoUser);
+    THorse.Get('/users', LController.DoUsers);
+  finally
+    FreeAndNil(LController);
+  end;
 end;
 
 initialization

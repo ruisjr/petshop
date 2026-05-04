@@ -3,7 +3,8 @@ unit Core.Functions;
 interface
 
 Uses
-   AnsiStrings
+   System.Json
+  ,AnsiStrings
   ,System.Hash
   ,Vcl.ComCtrls
   ,Vcl.Graphics
@@ -15,6 +16,17 @@ Uses
   ,Vcl.Imaging.JPEG
   ,System.NetEncoding
   ,Vcl.Imaging.PNGImage;
+
+type
+  TJsonObjectHelper = class Helper for TJSONObject
+  public
+    procedure ClearAndFreeItems;
+  end;
+
+  TJsonValueHelper = class Helper for TJSONValue
+  public
+    procedure ClearAndFreeItems;
+  end;
 
 function ConcederAcessoPastaRede(RemotePath, UserName, Password : PAnsiChar; vGeraRaise: Boolean = False): Boolean;
 function RemoveDirBarra(pPath: String): String;
@@ -328,6 +340,57 @@ end;
 function GetHashMD5String(const pValue: String): String;
 begin
   Result := THashMD5.GetHashString(pValue);
+end;
+
+{ TJsonObjectHelper }
+
+procedure TJsonObjectHelper.ClearAndFreeItems;
+var
+  vIx: Integer;
+  vPar: TJSONPair;
+begin
+  for vIx := Self.Count - 1 downto 0 do
+  begin
+    vPar := Self.Pairs[vIx];
+    if (vPar.JsonValue is TJSONObject) then
+      TJSONObject(vPar.JsonValue).ClearAndFreeItems;
+
+    Self.RemovePair(vPar.JsonString.Value);
+    vPar.Free;
+  end;
+end;
+
+{ TJsonValueHelper }
+
+procedure TJsonValueHelper.ClearAndFreeItems;
+var
+  vIx: Integer;
+  vPar: TJSONPair;
+  vObj: TJSONObject;
+  procedure RemovePair(vObj: TJSONObject);
+  var
+    I: Integer;
+  begin
+    for I := vObj.Count - 1 downto 0 do
+    begin
+      vPar := vObj.Pairs[I];
+      vObj.RemovePair(vPar.JsonString.value);
+      vPar.Free;
+    end;
+  end;
+begin
+  if Self.ClassType = TJSONArray then
+  begin
+    for vIx := TJSONArray(Self).Count -1 downto 0 do
+    begin
+      vObj := TJSONArray(Self).Remove(vIx) as TJSONObject;
+      RemovePair(vObj);
+      if Assigned(vObj) then
+        vObj.Free;
+    end;
+  end
+  else
+    RemovePair(TJSONObject(Self));
 end;
 
 end.

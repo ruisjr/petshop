@@ -66,7 +66,7 @@ begin
       on E: Exception do
       begin
         Env.Log.Error(E.Message);
-        raise Exception.Create('Error: Não foi possível recuperar usu[arios da base de dados.');
+        raise Exception.Create('Error: Não foi possível recuperar usuários da base de dados.');
       end;
     end;
   finally
