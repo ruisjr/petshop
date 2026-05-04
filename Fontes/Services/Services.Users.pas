@@ -60,7 +60,7 @@ begin
   LDAO := TDataBaseDAO<TUsuario>.Create;
   try
     try
-      LUsuarioList := LDAO.ToList(50, 1);
+      LUsuarioList := LDAO.Fields('id, nome, login, data_cadastro, data_ultimo_acesso, email, bloqueado, ativo, primeiro_acesso').ToList(50, 1);
       Result := TJson.ObjectListToString<TUsuario>(LUsuarioList);
     except
       on E: Exception do

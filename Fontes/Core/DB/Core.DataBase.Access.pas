@@ -215,6 +215,7 @@ end;
 
 function TDataBaseDAO<T>.Fields(const pFields: String): IDataBaseDAO<T>;
 begin
+  Result := Self;
   FFields := pFields;
 end;
 

@@ -4,7 +4,8 @@ interface
 
 uses
    {Classes de Negócio}
-   Core.Entidades.ModelBase;
+    Core.Entidades.CustomAttributes
+   ,Core.Entidades.ModelBase;
 
 type
   TUsuarioDTO = class(TBaseModel)

@@ -43,6 +43,7 @@ type
     function Where(const pConditional: String; const pOperatorType: TOperatorType; const pValue: TValue): IDataBaseDAO<T>;
     function WhereAnd(const pConditional: String; const pOperatorType: TOperatorType; const pValue: TValue): IDataBaseDAO<T>;
 
+    function Fields(const pFields: String): IDataBaseDAO<T>;
     function SQL(const pSQL: String): IDataBaseDAO<T>;
     function OrderBy(const pField: String): IDataBaseDAO<T>;
     function GroupBy(const pField: String): IDataBaseDAO<T>;
