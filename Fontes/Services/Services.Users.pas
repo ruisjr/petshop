@@ -2,20 +2,24 @@ unit Services.Users;
 
 interface
 
+uses
+  {Classes de Sistema}
+  System.JSON;
+
 type
   TServiceUsuario = class
   strict private
   public
     function GetUsuario(const id: Integer): String;
     function GetUsuarios(): String;
+    function PostUsuario(const pBody: String): String;
   end;
 
 implementation
 
 uses
   {Classes de Sistema}
-   System.JSON
-  ,Rest.Json
+   Rest.Json
   ,System.SysUtils
   ,System.Generics.Collections
   {Classes de Negócio}
@@ -69,6 +73,21 @@ begin
         raise Exception.Create('Error: Não foi possível recuperar usuários da base de dados.');
       end;
     end;
+  finally
+    LDAO.FreeMemory;
+  end;
+end;
+
+function TServiceUsuario.PostUsuario(const pBody: String): String;
+var
+  LDAO: IDataBaseDAO<TUsuario>;
+  LUsuario: TUsuario;
+begin
+  LDAO := TDataBaseDAO<TUsuario>.Create;
+  try
+    LUsuario := TJson.JsonToObject<TUsuario>(TJSONObject(TJSONObject.ParseJSONValue(pBody)));
+
+    LDAO.Insert(LUsuario);
   finally
     LDAO.FreeMemory;
   end;

@@ -13,8 +13,9 @@ uses
 type
   TControllerUser = class(TControllerBase)
   public
-    procedure DoUser(Req: THorseRequest; Res: THorseResponse);
-    procedure DoUsers(Req: THorseRequest; Res: THorseResponse);
+    procedure DoGetUser(Req: THorseRequest; Res: THorseResponse);
+    procedure DoGetUsers(Req: THorseRequest; Res: THorseResponse);
+    procedure DoPostUser(Req: THorseRequest; Res: THorseResponse);
   end;
 
 procedure Registry;
@@ -26,7 +27,7 @@ uses
    System.JSON
   ,Services.Users;
 
-procedure TControllerUser.DoUser(Req: THorseRequest; Res: THorseResponse);
+procedure TControllerUser.DoGetUser(Req: THorseRequest; Res: THorseResponse);
 var
   LBody: TJsonObject;
   LMsg: string;
@@ -51,7 +52,7 @@ begin
   end;
 end;
 
-procedure TControllerUser.DoUsers(Req: THorseRequest; Res: THorseResponse);
+procedure TControllerUser.DoGetUsers(Req: THorseRequest; Res: THorseResponse);
 var
   LService: TServiceUsuario;
 begin
@@ -68,14 +69,35 @@ begin
   end;
 end;
 
+procedure TControllerUser.DoPostUser(Req: THorseRequest; Res: THorseResponse);
+var
+  LService: TServiceUsuario;
+begin
+  LService := TServiceUsuario.Create;
+  try
+    try
+      Res.Send(LService.PostUsuario(Req.Body));
+    except
+      on E: Exception do
+        Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
+    end;
+  finally
+    FreeAndNil(LService);
+  end;
+end;
+
 procedure Registry;
 var
   LController: TControllerUser;
 begin
   LController := TControllerUser.Create;
   try
-    THorse.Get('/user', LController.DoUser);
-    THorse.Get('/users', LController.DoUsers);
+    {Métodos Get}
+    THorse.Get('/user', LController.DoGetUser);
+    THorse.Get('/users', LController.DoGetUsers);
+
+    {Métodos Post}
+    THorse.Post('/user', LController.DoPostUser);
   finally
     FreeAndNil(LController);
   end;
