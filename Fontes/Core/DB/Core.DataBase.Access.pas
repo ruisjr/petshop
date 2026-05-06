@@ -15,14 +15,13 @@ uses
   ,Core.Environment
   ,Core.DataBase.Types
   ,Core.DataBase.Connection
-  ,Core.DataBase.RttiHelper
   ,Core.DataBase.Interfaces
   ,Core.DataBase.QueryBuilder
   ,Core.Entidades.CustomAttributes;
 
 type
   TDataBaseDAO<T: class, constructor> = class(TInterfacedObject, IDataBaseDAO<T>)
-  protected
+  strict private
     FEntity: T;
     FForm: TForm;
     FSQL: String;
@@ -34,9 +33,8 @@ type
     FList: TObjectList<T>;
     FParameters: TDictionary<String, TValue>;
     FDataSource: TDataSource;
-  strict private
-    FQuery: IDataBaseQuery<T>;
 
+    FQuery: IDataBaseQuery<T>;
     {Procedures}
     procedure Clear;
     procedure OnDataChange(Sender: TObject; Field: TField);
@@ -71,6 +69,8 @@ type
     function ToList(const pRecMax: Integer = 0; const pRecSkip: Integer = 0): TObjectList<T>;
     function First: T;
     function Bind(const pForm: TForm): IDataBaseDAO<T>;
+
+    function GetNewID: Integer;
   end;
 
 implementation
@@ -102,6 +102,11 @@ begin
   FFields := '';
   FParameters.Clear;
 end;
+
+//function TDataBaseDAO<T>.Connection: IDBConnection;
+//begin
+//  Result := vgDBConnection;
+//end;
 
 constructor TDataBaseDAO<T>.Create(const pEntity: T);
 begin
@@ -183,7 +188,6 @@ begin
       TDataBaseRtti<T>.New(nil).BindEntityToForm(FForm, FList[FDataSource.DataSet.RecNo - 1]);
   end;
 end;
-
 
 function TDataBaseDAO<T>.SQL(const pSQL: String): IDataBaseDAO<T>;
 begin
@@ -274,6 +278,22 @@ begin
   FForm := pForm;
 end;
 
+function TDataBaseDAO<T>.GetNewID: Integer;
+var
+  LSQL: String;
+begin
+  TSQLMaker<T>
+    .New(FEntity)
+    .GetNewID(LSQL);
+
+  FQuery.SQL.Clear;
+  FQuery.SQL.Add(LSQL);
+  FQuery.FillParameterSequence(FEntity);
+  FQuery.Open;
+
+  Result := FQuery.Fields[0].AsInteger;
+end;
+
 function TDataBaseDAO<T>.GroupBy(const pField: String): IDataBaseDAO<T>;
 begin
   Result := Self;
@@ -288,6 +308,9 @@ var
   vSQL: String;
 begin
   try
+    {Atribuir ao pEntity o id obtido}
+    TDataBaseRtti<T>.New(Self).BindValueToProperty(pEntity, 'Id', Self.GetNewID);
+
     TSQLMaker<T>.New(pEntity).Insert(vSQL);
 
     FQuery.SQL.Clear;

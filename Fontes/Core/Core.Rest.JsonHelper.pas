@@ -39,7 +39,8 @@ begin
     end;
 
     // Retorna a lista completa formatada
-    Result := LJsonArray.Format(2); // O parâmetro 2 é para identação (pretty print)
+//    Result := LJsonArray.Format(2); // O parâmetro 2 é para identação (pretty print)
+    Result := LJsonArray.ToJSON;
   finally
     LJsonArray.Free;
   end;

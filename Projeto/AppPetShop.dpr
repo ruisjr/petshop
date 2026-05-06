@@ -27,7 +27,10 @@ uses
   Entidade.Usuario in '..\Fontes\Entidades\Entidade.Usuario.pas',
   DTO.Usuario in '..\Fontes\DTOs\DTO.Usuario.pas',
   Core.Rest.JsonHelper in '..\Fontes\Core\Core.Rest.JsonHelper.pas',
-  Controller.Base in '..\Fontes\Controllers\Controller.Base.pas';
+  Controller.Base in '..\Fontes\Controllers\Controller.Base.pas',
+  Entidade.Pessoa in '..\Fontes\Entidades\Entidade.Pessoa.pas',
+  Controller.Pessoa in '..\Fontes\Controllers\Controller.Pessoa.pas',
+  Services.Pessoa in '..\Fontes\Services\Services.Pessoa.pas';
 
 {$R *.res}
 

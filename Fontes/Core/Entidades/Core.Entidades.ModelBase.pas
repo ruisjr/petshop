@@ -10,7 +10,6 @@ Uses
 type
   TBaseModel = class
   private
-
   public
     destructor Destroy; override;
 

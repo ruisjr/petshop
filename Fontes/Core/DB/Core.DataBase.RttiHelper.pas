@@ -18,7 +18,8 @@ type
     function IsEnum: Boolean;
     function IsIgnore: Boolean;
     function IsDBField: Boolean;
-    function FieldName: string;
+    function FieldName: string; overload;
+    function FieldName<T: TCustomAttribute>: String; overload;
     function DisplayName: string;
     function Sequence: String;
     function DBDateTime: String;
@@ -81,6 +82,18 @@ begin
   Result := Name;
   if IsDBField then
     Result := GetAttribute<DBField>.Name;
+end;
+
+function TRttiPropertyHelper.FieldName<T>: String;
+var
+  vAtributo: TCustomAttribute;
+begin
+  Result := '';
+  for vAtributo in GetAttributes do
+  begin
+    if vAtributo is T then
+      Exit(Self.FieldName);
+  end;
 end;
 
 function TRttiPropertyHelper.FormatMsg(const pMsg: String): String;

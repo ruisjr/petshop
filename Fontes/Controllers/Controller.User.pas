@@ -18,20 +18,26 @@ type
     procedure DoPostUser(Req: THorseRequest; Res: THorseResponse);
   end;
 
+var
+  LController: TControllerUser;
+
 procedure Registry;
+procedure UnRegistry;
 
 implementation
 
 uses
   {Classes de Sistema}
    System.JSON
-  ,Services.Users;
+  {Classes de Negócio}
+  ,Services.Users
+  ,Core.Environment;
 
 procedure TControllerUser.DoGetUser(Req: THorseRequest; Res: THorseResponse);
 var
   LBody: TJsonObject;
-  LMsg: string;
   LService: TServiceUsuario;
+  LResponse: String;
 begin
   LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
   if not Assigned(LBody) then
@@ -42,7 +48,9 @@ begin
   LService := TServiceUsuario.Create;
   try
     try
-      Res.Send(LService.GetUsuario(LBody.GetValue<Integer>('id')));
+      LResponse := LService.GetUsuario(LBody.GetValue<Integer>('id'));
+      Env.Log.Debug('DoGetUser | Response: ' + LResponse);
+      Res.Send(LResponse);
     except
       on E: Exception do
         Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
@@ -55,11 +63,14 @@ end;
 procedure TControllerUser.DoGetUsers(Req: THorseRequest; Res: THorseResponse);
 var
   LService: TServiceUsuario;
+  LResponse: String;
 begin
   LService := TServiceUsuario.Create;
   try
     try
-      Res.Send(LService.GetUsuarios());
+      LResponse := Self.GetJsonDefaultSuccess(LService.GetUsuarios(), THTTPStatus.OK);
+      Env.Log.Debug('DoGetUsers | Response: ' + LResponse);
+      Res.Send(LResponse);
     except
       on E: Exception do
         Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
@@ -72,11 +83,14 @@ end;
 procedure TControllerUser.DoPostUser(Req: THorseRequest; Res: THorseResponse);
 var
   LService: TServiceUsuario;
+  LResponse: String;
 begin
   LService := TServiceUsuario.Create;
   try
     try
-      Res.Send(LService.PostUsuario(Req.Body));
+      LResponse := Self.GetJsonDefaultSuccess(LService.PostUsuario(Req.Body), THTTPStatus.OK);
+      Env.Log.Debug('DoPostUser | Response: ' + LResponse);
+      Res.Send(LResponse);
     except
       on E: Exception do
         Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
@@ -87,23 +101,24 @@ begin
 end;
 
 procedure Registry;
-var
-  LController: TControllerUser;
 begin
-  LController := TControllerUser.Create;
-  try
-    {Métodos Get}
-    THorse.Get('/user', LController.DoGetUser);
-    THorse.Get('/users', LController.DoGetUsers);
+  {Métodos Get}
+  THorse.Get('/user', LController.DoGetUser);
+  THorse.Get('/users', LController.DoGetUsers);
 
-    {Métodos Post}
-    THorse.Post('/user', LController.DoPostUser);
-  finally
-    FreeAndNil(LController);
-  end;
+  {Métodos Post}
+  THorse.Post('/user', LController.DoPostUser);
+end;
+
+procedure UnRegistry;
+begin
+  FreeAndNil(LController);
 end;
 
 initialization
   Registry;
+
+finalization
+  UnRegistry;
 
 end.

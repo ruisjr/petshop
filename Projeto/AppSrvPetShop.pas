@@ -16,7 +16,7 @@ uses
   ,System.Variants
   ,System.Classes
   ,Vcl.Samples.Spin
-
+  {Classes de Negócio}
   ,Controller.User;
 
 type
@@ -38,18 +38,28 @@ var
 
 implementation
 
+uses
+  {Classes de Negócio}
+  Core.Environment;
+
 {$R *.dfm}
 
 procedure TFrmPrincipal.btnStartClick(Sender: TObject);
 begin
   if not THorse.IsRunning then
+  begin
     THorse.Listen(spePorta.Value);
+    Env.Log.Debug(Format('Serviço iniciado na porta %d.', [spePorta.Value]));
+  end;
 end;
 
 procedure TFrmPrincipal.btnStopClick(Sender: TObject);
 begin
   if THorse.IsRunning then
+  begin
     THorse.StopListen;
+    Env.Log.Debug('Serviço finalizado com sucesso.');
+  end;
 end;
 
 end.

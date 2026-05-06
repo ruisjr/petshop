@@ -21,6 +21,7 @@ type
     function GetConnection: TFDConnection;
 
     {Procedures}
+    procedure FreeMemory;
     procedure BeginTransaction;
     procedure CommitTransaction;
     procedure RollBackTransaction;
@@ -37,6 +38,7 @@ type
     procedure Delete; overload;
 
     {Functions}
+    function GetNewID: Integer;
     function DataSet: TDataSet;
     function DataSource(pDataSource: TDataSource): IDataBaseDAO<T>;
 
@@ -73,6 +75,7 @@ type
     function Limit(pLimit: String): ISQLMaker<T>;
     function Join(pJoin: String): ISQLMaker<T>;
     function SQL(pSQL: String): ISQLMaker<T>;
+    function GetNewID(var pSQL: String): ISQLMaker<T>;
   end;
 
   IDataBaseQuery<T> = interface
@@ -80,6 +83,7 @@ type
     {Functions}
     function SQL: TStrings;
     function Params: TParams;
+    function Fields: TFields;
     function ExecSQL: IDataBaseQuery<T>;
     function DataSet: TDataSet;
     function Open(pSQL: String): IDataBaseQuery<T>; overload;
@@ -93,10 +97,13 @@ type
     procedure SetRecsSkip(const pValue: Integer);
     procedure FillParameter(pParameters: TDictionary<String, TValue>); overload;
     procedure FillParameter(pEntity: T; pInsert: Boolean = False); overload;
+    procedure FillParameterSequence(pEntity: T);
   end;
 
   IDataBaseRtti<T: class> = interface
     ['{7E8CDFB6-A11D-44C7-A60E-012ABB2DB869}']
+    function GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
+
     function TableName(var pTableName: String): IDataBaseRtti<T>;
     function ClassName(var pClassName: String): IDataBaseRtti<T>;
     function Fields(var pFields: String): IDataBaseRtti<T>;
@@ -113,6 +120,7 @@ type
     function DictionaryTypeFields(const pParameters: TDictionary<string, TValue>; var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
     function BindFormToEntity(pForm : TForm; var pEntity: T): IDataBaseRtti<T>;
     function BindEntityToForm(pForm : TForm; const pEntity: T): IDataBaseRtti<T>;
+    function BindValueToProperty(var pEntity: T;pPropertyName: string; pValue: TValue): IDataBaseRtti<T>;
   end;
 
 implementation

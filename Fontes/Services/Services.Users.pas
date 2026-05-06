@@ -24,13 +24,11 @@ uses
   ,System.Generics.Collections
   {Classes de Negócio}
   ,Entidade.Usuario
-  ,Core.Rest.JsonHelper
+  ,Core.Environment
   ,Core.DataBase.Types
-  ,Core.DataBase.Interfaces
+  ,Core.Rest.JsonHelper
   ,Core.DataBase.Access
-  ,Core.Environment;
-
-
+  ,Core.DataBase.Interfaces;
 
 { TServiceUsuario }
 
@@ -43,7 +41,11 @@ begin
   try
     try
       LUsuario := LDAO.Where('id', OtEqual, id).First;
-      Result := TJson.ObjectToJsonObject(LUsuario).ToJSON;
+      try
+        Result := TJson.ObjectToJsonObject(LUsuario).ToJSON;
+      finally
+        FreeAndNil(LUsuario);
+      end;
     except
       on E: Exception do
       begin
@@ -65,7 +67,12 @@ begin
   try
     try
       LUsuarioList := LDAO.Fields('id, nome, login, data_cadastro, data_ultimo_acesso, email, bloqueado, ativo, primeiro_acesso').ToList(50, 1);
-      Result := TJson.ObjectListToString<TUsuario>(LUsuarioList);
+      try
+        Result := TJson.ObjectListToString<TUsuario>(LUsuarioList);
+      finally
+        LUsuarioList.Clear;
+        FreeAndNil(LUsuarioList);
+      end;
     except
       on E: Exception do
       begin
@@ -86,8 +93,30 @@ begin
   LDAO := TDataBaseDAO<TUsuario>.Create;
   try
     LUsuario := TJson.JsonToObject<TUsuario>(TJSONObject(TJSONObject.ParseJSONValue(pBody)));
+    try
+      Env.Connection.BeginTransaction;
+      try
+        {Verifica se já existe o id enviado}
+        if (LUsuario.ID > 0) then
+          LDAO.Where('id', OtEqual, LUsuario.ID).Update(LUsuario)
+        else
+          LDAO.Insert(LUsuario);
 
-    LDAO.Insert(LUsuario);
+        {Commita as modificações}
+        Env.Connection.CommitTransaction;
+
+        Result := TJson.ObjectToJsonString(LUsuario);
+      except
+        on E: Exception do
+        begin
+          Env.Connection.RollBackTransaction;
+          Env.Log.Error(E.Message);
+          raise E;
+        end;
+      end;
+    finally
+      FreeAndNil(LUsuario);
+    end;
   finally
     LDAO.FreeMemory;
   end;

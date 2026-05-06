@@ -25,7 +25,7 @@ type
     procedure SetSenha(const Value: String);
 
   public
-    [DBField('ID'), PK, NotNull, Seq('seq_usuario'), Display('Código')]
+    [DBField('ID'), PK, NotNull, Seq('usuario_seq'), Display('Código')]
     property ID:    Integer          read FID             write FID;
     [DBField('nome'), NotNull, Display('Nome')]
     property Nome:  String           read FNome           write FNome;

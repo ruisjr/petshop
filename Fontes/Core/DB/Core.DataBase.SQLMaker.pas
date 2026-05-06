@@ -16,7 +16,7 @@ uses
 
 type
   TSQLMaker<T: class, constructor> = class(TInterfacedObject, ISQLMaker<T>)
-  private
+  strict private
     FInstance : T;
     FFields   : String;
     FWhere    : String;
@@ -41,6 +41,7 @@ type
     function SelectById(var pSQL: String): ISQLMaker<T>;
     function Fields(pFields: String): ISQLMaker<T>;
     function TableName(var pTableName: String): ISQLMaker<T>;
+    function GetNewID(var pSQL: String): ISQLMaker<T>;
 
     function Where(pWhere: String): ISQLMaker<T>; overload;
     function Where(pParameters: TDictionary<String, TValue>): ISQLMaker<T>; overload;
@@ -91,6 +92,12 @@ begin
   Result := Self;
   if not Trim(pFields).IsEmpty then
     FFields := pFields;
+end;
+
+function TSQLMaker<T>.GetNewID(var pSQL: String): ISQLMaker<T>;
+begin
+  Result := Self;
+  pSQL := 'SELECT NEXTVAL(:PAR_SEQUENCE) AS ID';
 end;
 
 function TSQLMaker<T>.GroupBy(pGroup: String): ISQLMaker<T>;

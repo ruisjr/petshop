@@ -3,10 +3,10 @@ unit Core.DataBase.Rtti;
 interface
 
 uses
-  //Classes de sistema
+  {Classes de sistema}
    Data.Db
-  ,AdvEdit
-  ,Advcombo
+//  ,AdvEdit
+//  ,Advcombo
   ,Vcl.Forms
   ,System.Rtti
   ,System.JSON
@@ -15,9 +15,9 @@ uses
   ,System.Classes
   ,System.SysUtils
   ,System.Variants
-  ,AdvOfficeButtons
+//  ,AdvOfficeButtons
   ,System.Generics.Collections
-  //Classes de negócio
+  {Classes de negócio}
   ,Core.DataBase.Types
   ,Core.DataBase.RttiHelper
   ,Core.DataBase.Interfaces
@@ -37,7 +37,6 @@ type
     function _FloatFormat(pValue: String): Currency;
     function _BindValueToComponent(pComponent: TComponent; pValue : Variant): IDataBaseRtti<T>;
     function _BindValueToProperty(pEntity: T; pProperty: TRttiProperty; pValue : TValue): IDataBaseRtti<T>;
-    function _GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
     function _GetRttiPropertyValue(pEntity: T; pPropertyName: String): Variant;
     function _GetComponentToValue(pComponent: TComponent): TValue;
   public
@@ -49,6 +48,8 @@ type
     class function New(pInstance: T): IDataBaseRtti<T>;
 
     {Funções}
+    function GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
+
     function TableName(var pTableName: String): IDataBaseRtti<T>;
     function Sequence(var pSequence: String): IDataBaseRtti<T>;
     function ClassName(var pClassName: String): IDataBaseRtti<T>;
@@ -67,8 +68,8 @@ type
     function DictionaryTypeFields(var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
     function BindFormToEntity(pForm : TForm; var pEntity: T): IDataBaseRtti<T>;
     function BindEntityToForm(pForm : TForm; const pEntity: T): IDataBaseRtti<T>;
+    function BindValueToProperty(var pEntity: T; pPropertyName: string; pValue: TValue): IDataBaseRtti<T>;
   end;
-
 
 
 implementation
@@ -113,12 +114,21 @@ begin
     begin
       if vPrpRtti.Has<Bind> then
       begin
-        _BindValueToProperty(pEntity, _GetRttiProperty(pEntity, vPrpRtti.GetAttribute<Bind>.Field), _GetComponentToValue(pForm.FindComponent(vPrpRtti.Name)));
+        _BindValueToProperty(pEntity, GetRttiProperty(pEntity, vPrpRtti.GetAttribute<Bind>.Field), _GetComponentToValue(pForm.FindComponent(vPrpRtti.Name)));
       end;
     end;
   finally
     vCtxRtti.Free;
   end;
+end;
+
+function TDataBaseRtti<T>.BindValueToProperty(var pEntity: T; pPropertyName: string; pValue: TValue): IDataBaseRtti<T>;
+var
+  LPropRtti: TRttiProperty;
+begin
+  Result := Self;
+  LPropRtti := GetRttiProperty(Pointer(pEntity), pPropertyName);
+  LPropRtti.SetValue(Pointer(pEntity), pValue);
 end;
 
 function TDataBaseRtti<T>.ClassName(var pClassName: String): IDataBaseRtti<T>;
@@ -374,7 +384,8 @@ begin
         begin
           if prpRtti.IsPrimaryKey or prpRtti.IsForeignKey then
           begin
-            if prpRtti.IsSequence and FModeInsert then
+            if prpRtti.IsSequence and FModeInsert and 
+               (prpRtti.GetValue(Pointer(FInstance)).AsVariant <> null) then
               continue
             else
               pDictionary.Add(prpRtti.FieldName, prpRtti.GetValue(Pointer(FInstance)).AsInteger);
@@ -662,9 +673,13 @@ begin
 //      if vPrpRtti.IsAutoInc then
 //        Continue;
 
-      if FModeInsert and vPrpRtti.IsSequence then
+      if FModeInsert         and
+         vPrpRtti.IsSequence then
       begin
-        pParam := pParam + Format('nextval(%s), ', [QuotedStr(vPrpRtti.Sequence)]);
+        if (vPrpRtti.GetValue(Pointer(FInstance)).AsVariant <> null) then
+          pParam := pParam + Format(':%s,', [vPrpRtti.FieldName])
+        else
+          pParam := pParam + Format('nextval(%s), ', [QuotedStr(vPrpRtti.Sequence)]);
         Continue;
       end;
 
@@ -923,11 +938,11 @@ begin
   if pComponent is TEdit then
     Result := TValue.FromVariant((pComponent as TEdit).Text);
 
-  if pComponent is TAdvEdit then
-    Result := TValue.FromVariant((pComponent as TAdvEdit).Text);
+//  if pComponent is TAdvEdit then
+//    Result := TValue.FromVariant((pComponent as TAdvEdit).Text);
 
-  if pComponent is TAdvComboBox then
-    Result := TValue.FromVariant((pComponent as TAdvComboBox).Items[(pComponent as TAdvComboBox).ItemIndex]);
+//  if pComponent is TAdvComboBox then
+//    Result := TValue.FromVariant((pComponent as TAdvComboBox).Items[(pComponent as TAdvComboBox).ItemIndex]);
 
   if pComponent is TRadioGroup then
     Result := TValue.FromVariant((pComponent as TRadioGroup).Items[(pComponent as TRadioGroup).ItemIndex]);
@@ -935,8 +950,8 @@ begin
   if pComponent is TShape then
     Result := TValue.FromVariant((pComponent as TShape).Brush.Color);
 
-  if pComponent is TAdvOfficeCheckBox then
-    Result := TValue.FromVariant((pComponent as TAdvOfficeCheckBox).Checked);
+//  if pComponent is TAdvOfficeCheckBox then
+//    Result := TValue.FromVariant((pComponent as TAdvOfficeCheckBox).Checked);
 
 //  if pComponent is TTrackBar then
 //    Result := TValue.FromVariant((pComponent as TTrackBar).Position);
@@ -948,7 +963,7 @@ begin
 //    Result := TValue.FromVariant((pComponent as TDateEdit).DateTime);
 end;
 
-function TDataBaseRtti<T>._GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
+function TDataBaseRtti<T>.GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
 var
   vTypRttiEntity: TRttiType;
   vCtxRttiEntity: TRttiContext;
@@ -970,7 +985,7 @@ end;
 
 function TDataBaseRtti<T>._GetRttiPropertyValue(pEntity: T; pPropertyName: String): Variant;
 begin
-  Result := _GetRttiProperty(pEntity, pPropertyName).GetValue(Pointer(pEntity)).AsVariant;
+  Result := GetRttiProperty(pEntity, pPropertyName).GetValue(Pointer(pEntity)).AsVariant;
 end;
 
 end.

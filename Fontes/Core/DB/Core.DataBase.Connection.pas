@@ -48,20 +48,20 @@ type
     class function GetInstance: IDBConnection;
     class procedure FreeInstance; reintroduce;
 
-    {Functions}
-    function GetConnection: TFDConnection;
-
     {procedures}
     procedure Connect;
     procedure Disconnect;
     procedure LoadConfig;
+  protected
+    {Functions}
+    function GetConnection: TFDConnection;
+
+    {Procedures}
+    procedure FreeMemory;
     procedure BeginTransaction;
     procedure CommitTransaction;
     procedure RollBackTransaction;
   end;
-
-var
-  vgDBConnection: TDataBaseConnection;
 
 implementation
 
@@ -101,14 +101,12 @@ constructor TDataBaseConnection.Create;
 begin
   FAppName := cAppName;
   LoadConfig;
+  Self.FConnectionLock := TCriticalSection.Create;
 end;
 
 destructor TDataBaseConnection.Destroy;
 begin
-  if FConnection.Connected then
-    FConnection.Close;
-
-  FreeAndNil(FConnection);
+  Self.FreeMemory;
   inherited;
 end;
 
@@ -136,6 +134,16 @@ begin
   finally
     FConnectionLock.Leave;
   end;
+end;
+
+procedure TDataBaseConnection.FreeMemory;
+begin
+  FreeInstance;
+  if FConnection.Connected then
+    FConnection.Close;
+
+  FreeAndNil(Self.FConnectionLock);
+  FreeAndNil(FConnection);
 end;
 
 function TDataBaseConnection.GetConnection: TFDConnection;
@@ -215,21 +223,5 @@ begin
   if FConnection.InTransaction then
     FConnection.Rollback;
 end;
-
-initialization
-begin
-  vgDBConnection := TDataBaseConnection.Create;
-  vgDBConnection.FConnectionLock := TCriticalSection.Create;
-end;
-
-finalization
-begin
-  vgDBConnection.Disconnect;
-
-  TDataBaseConnection.FreeInstance;
-  FreeAndNil(TDataBaseConnection.FConnectionLock);
-  FreeAndNil(vgDBConnection);
-end;
-
 
 end.

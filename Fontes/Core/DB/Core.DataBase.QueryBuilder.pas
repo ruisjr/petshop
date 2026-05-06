@@ -15,14 +15,15 @@ uses
   {Classes de negócio}
   ,Core.DataBase.Rtti
   ,Core.DataBase.Types
-  ,Core.DataBase.Connection
+  ,Core.DataBase.RttiHelper
   ,Core.DataBase.Interfaces;
 
 type
   TQueryBuilder<T: class, constructor> = class(TInterfacedObject, IDataBaseQuery<T>)
-  private
+  strict private
     FWhereClause: TStrings;
     FParams: TParams;
+    FFields: TFields;
     FQuery: TFDQuery;
   protected
     constructor Create;
@@ -35,6 +36,7 @@ type
 
     function SQL: TStrings;
     function Params: TParams;
+    function Fields: TFields;
     function ExecSQL: IDataBaseQuery<T>;
     function DataSet: TDataSet;
     function Open(pSQL: String): IDataBaseQuery<T>; overload;
@@ -48,10 +50,13 @@ type
     procedure SetRecsSkip(const pValue: Integer);
     procedure FillParameter(pParameters: TDictionary<String, TValue>); overload;
     procedure FillParameter(pInstance: T; pInsert: Boolean = False); overload;
+    procedure FillParameterSequence(pEntity: T);
   end;
 
 implementation
 
+uses
+  Core.Environment;
 
 { TQueryBuilder }
 
@@ -60,7 +65,7 @@ begin
   FWhereClause := TStringList.Create;
 
   FQuery := TFDQuery.Create(nil);
-  FQuery.Connection := vgDBConnection.GetConnection;
+  FQuery.Connection := Env.Connection.GetConnection;
 
   Fquery.UpdateOptions.ReadOnly := True;
   FQuery.FetchOptions.Mode := fmAll;
@@ -106,6 +111,17 @@ begin
     FreeAndNil(FParams);
 end;
 
+function TQueryBuilder<T>.Fields: TFields;
+begin
+  if not Assigned(FFields) then
+  begin
+    FFields := TFields.Create(FQuery);
+    FFields := FQuery.Fields;
+  end;
+  Result := FFields;
+
+end;
+
 procedure TQueryBuilder<T>.FillParameter(pInstance: T; pInsert: Boolean);
 var
   Key: String;
@@ -139,6 +155,22 @@ begin
   finally
     FreeAndNil(DictionaryFields);
     FreeAndNil(DictionaryTypeFields);
+  end;
+end;
+
+procedure TQueryBuilder<T>.FillParameterSequence(pEntity: T);
+var
+  LRttiPrp: TRttiProperty;
+begin
+  LRttiPrp := TDataBaseRtti<T>.New(Pointer(pEntity)).GetRttiProperty(Pointer(pEntity), 'ID');
+  if LRttiPrp.IsSequence then
+  begin
+    if FQuery.Params.FindParam('par_sequence') <> nil then
+    begin
+      FQuery.Params.ParamByName('par_sequence').ParamType := ptInput;
+      FQuery.Params.ParamByName('par_sequence').DataType  := ftString;
+      FQuery.Params.ParamByName('par_sequence').AsString  := LRttiPrp.Sequence;
+    end;
   end;
 end;
 
