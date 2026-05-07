@@ -15,9 +15,7 @@ uses
   ,System.SysUtils
   ,System.Variants
   ,System.Classes
-  ,Vcl.Samples.Spin
-  {Classes de Negócio}
-  ,Controller.User;
+  ,Vcl.Samples.Spin;
 
 type
   TFrmPrincipal = class(TForm)

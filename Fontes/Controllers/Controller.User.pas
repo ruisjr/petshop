@@ -30,6 +30,7 @@ uses
   {Classes de Sistema}
    System.JSON
   {Classes de Negócio}
+  ,Core.Functions
   ,Services.Users
   ,Core.Environment;
 
@@ -37,23 +38,20 @@ procedure TControllerUser.DoGetUser(Req: THorseRequest; Res: THorseResponse);
 var
   LBody: TJsonObject;
   LService: TServiceUsuario;
-  LResponse: String;
 begin
-  LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
-  if not Assigned(LBody) then
-    raise EHorseException.New.Error('Corpo da mensagem não foi informado.').Status(THTTPStatus.BadRequest)
-  else if (LBody.GetValue<Integer>('id') = 0) then
-    raise EHorseException.New.Error('ID não informado.').Status(THTTPStatus.BadRequest);
-
   LService := TServiceUsuario.Create;
   try
     try
-      LResponse := LService.GetUsuario(LBody.GetValue<Integer>('id'));
-      Env.Log.Debug('DoGetUser | Response: ' + LResponse);
-      Res.Send(LResponse);
+      LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
+      try
+        Self.ValidadeInfoRequest(LBody);
+        Self.DoGet(LService.GetUsuario(LBody.GetValue<Integer>('id')), Res);
+      finally
+        LBody.ClearAndFreeItems;
+      end;
     except
       on E: Exception do
-        Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
+        Self.DoGetError('Ocorreu erro ao processar a solicitação', E.Message, Res);
     end;
   finally
     FreeAndNil(LService);
@@ -63,17 +61,14 @@ end;
 procedure TControllerUser.DoGetUsers(Req: THorseRequest; Res: THorseResponse);
 var
   LService: TServiceUsuario;
-  LResponse: String;
 begin
   LService := TServiceUsuario.Create;
   try
     try
-      LResponse := Self.GetJsonDefaultSuccess(LService.GetUsuarios(), THTTPStatus.OK);
-      Env.Log.Debug('DoGetUsers | Response: ' + LResponse);
-      Res.Send(LResponse);
+      Self.DoGet(LService.GetUsuarios(), Res);
     except
       on E: Exception do
-        Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
+        Self.DoGetError('Ocorreu erro ao processar a solicitação', E.Message, Res);
     end;
   finally
     FreeAndNil(LService);
@@ -83,17 +78,14 @@ end;
 procedure TControllerUser.DoPostUser(Req: THorseRequest; Res: THorseResponse);
 var
   LService: TServiceUsuario;
-  LResponse: String;
 begin
   LService := TServiceUsuario.Create;
   try
     try
-      LResponse := Self.GetJsonDefaultSuccess(LService.PostUsuario(Req.Body), THTTPStatus.OK);
-      Env.Log.Debug('DoPostUser | Response: ' + LResponse);
-      Res.Send(LResponse);
+      Self.DoPost(LService.PostUsuario(Req.Body), Res);
     except
       on E: Exception do
-        Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
+        Self.DoPostError('Ocorreu erro ao processar a solicitação', E.Message, Res);
     end;
   finally
     FreeAndNil(LService);

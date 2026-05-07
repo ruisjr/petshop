@@ -162,7 +162,7 @@ procedure TQueryBuilder<T>.FillParameterSequence(pEntity: T);
 var
   LRttiPrp: TRttiProperty;
 begin
-  LRttiPrp := TDataBaseRtti<T>.New(Pointer(pEntity)).GetRttiProperty(Pointer(pEntity), 'ID');
+  LRttiPrp := TDataBaseRtti<T>.New(pEntity).GetRttiProperty(pEntity, 'ID');
   if LRttiPrp.IsSequence then
   begin
     if FQuery.Params.FindParam('par_sequence') <> nil then

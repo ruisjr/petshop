@@ -60,8 +60,30 @@ begin
 end;
 
 function TServicePessoa.GetPessoas: String;
+var
+  LPessoaList: TObjectList<TPessoa>;
+  LDAO: IDataBaseDAO<TPessoa>;
 begin
-
+  LDAO := TDataBaseDAO<TPessoa>.Create;
+  try
+    try
+      LPessoaList := LDAO.ToList(50, 1);
+      try
+        Result := TJson.ObjectListToString<TPessoa>(LPessoaList);
+      finally
+        LPessoaList.Clear;
+        FreeAndNil(LPessoaList);
+      end;
+    except
+      on E: Exception do
+      begin
+        Env.Log.Error(E.Message);
+        raise Exception.Create('Error: Não foi possível recuperar usuários da base de dados.');
+      end;
+    end;
+  finally
+    LDAO.FreeMemory;
+  end;
 end;
 
 function TServicePessoa.PostPessoa(const pBody: String): String;

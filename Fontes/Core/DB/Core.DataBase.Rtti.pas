@@ -127,7 +127,7 @@ var
   LPropRtti: TRttiProperty;
 begin
   Result := Self;
-  LPropRtti := GetRttiProperty(Pointer(pEntity), pPropertyName);
+  LPropRtti := GetRttiProperty(pEntity, pPropertyName);
   LPropRtti.SetValue(Pointer(pEntity), pValue);
 end;
 

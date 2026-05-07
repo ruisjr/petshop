@@ -48,16 +48,13 @@ begin
       LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
       try
         Self.ValidadeInfoRequest(LBody);
-
-        LResponse := LService.GetPessoa(LBody.GetValue<Integer>('id'));
-        Env.Log.Debug('DoGetPessoa | Response: ' + LResponse);
-        Res.Send(LResponse);
+        Self.DoGet(LService.GetPessoa(LBody.GetValue<Integer>('id')), Res);
       finally
         LBody.ClearAndFreeItems;
       end;
     except
       on E: Exception do
-        Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
+        Self.DoGetError('Ocorreu erro ao processar a solicitação', E.Message, Res);
     end;
   finally
     FreeAndNil(LService);
@@ -65,8 +62,22 @@ begin
 end;
 
 procedure TControllerPessoa.DoGetPessoas(Req: THorseRequest; Res: THorseResponse);
+var
+  LService: TServicePessoa;
+  LResponse: String;
+  LMetodo: String;
 begin
-
+  LService := TServicePessoa.Create;
+  try
+    try
+      Self.DoGet(LService.GetPessoas(), Res);
+    except
+      on E: Exception do
+        Self.DoGetError('Ocorreu erro ao processar a solicitação', E.Message, Res);
+    end;
+  finally
+    FreeAndNil(LService);
+  end;
 end;
 
 procedure TControllerPessoa.DoPostPessoa(Req: THorseRequest; Res: THorseResponse);
@@ -77,12 +88,10 @@ begin
   LService := TServicePessoa.Create;
   try
     try
-      LResponse := Self.GetJsonDefaultSuccess(LService.PostPessoa(Req.Body), THTTPStatus.OK);
-      Env.Log.Debug('DoPostPessoa | Response: ' + LResponse);
-      Res.Send(LResponse);
+      Self.DoPost(LService.PostPessoa(Req.Body), Res);
     except
       on E: Exception do
-        Res.Send(Self.GetJsonDefaultError('Ocorreu erro ao processar a solicitação', E.Message, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
+        Self.DoPostError('Ocorreu erro ao processar a solicitação', E.Message, Res);
     end;
   finally
     FreeAndNil(LService);

@@ -4,7 +4,8 @@ interface
 
 uses
   {Classes de Sistema}
-   System.JSON
+   Horse
+  ,System.JSON
   ,Horse.Commons
   ,System.Classes
   ,System.SysUtils;
@@ -12,30 +13,62 @@ uses
 type
   TControllerBase = class(TPersistent)
   strict private
+    {Functions}
+    function GetJsonDefaultError(const pMsg, pDetailedMsg: string; pStatusCode: THTTPStatus): String;
+    function GetJsonDefaultSuccess(const pJson: String; pStatusCode: THTTPStatus): String;
   public
     {Construtores e Destrutores}
     constructor Create; reintroduce;
 
-    {Functions}
-    function GetJsonDefaultError(const pMsg, pDetailedMsg: string; pStatusCode: THTTPStatus): String;
-    function GetJsonDefaultSuccess(const pJson: String; pStatusCode: THTTPStatus): String;
-
     {procedures}
     procedure ValidadeInfoRequest(const pBody: TJSONObject);
+
+    procedure DoPost(pResponse: String; Res: THorseResponse);
+    procedure DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse);
+    procedure DoGet(pResponse: String; Res: THorseResponse);
+    procedure DoGetError(pMsg, pDetailedMessage: String; Res: THorseResponse);
   end;
 
 implementation
 
 uses
-   Horse
   {Classe de Negócio}
-  ,Core.Functions;
+   Core.Functions
+  ,Core.Environment;
 
 { TServiceBase }
 
 constructor TControllerBase.Create;
 begin
   inherited Create;
+end;
+
+procedure TControllerBase.DoGet(pResponse: String; Res: THorseResponse);
+var
+  LResponse: String;
+begin
+  LResponse := Self.GetJsonDefaultSuccess(pResponse, THTTPStatus.OK);
+  Env.Log.Debug('DoGet | Response: ' + LResponse);
+  Res.Send(LResponse);
+end;
+
+procedure TControllerBase.DoGetError(pMsg, pDetailedMessage: String; Res: THorseResponse);
+begin
+  Res.Send(Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
+end;
+
+procedure TControllerBase.DoPost(pResponse: String; Res: THorseResponse);
+var
+  LResponse: String;
+begin
+  LResponse := Self.GetJsonDefaultSuccess(pResponse, THTTPStatus.OK);
+  Env.Log.Debug('DoPost | Response: ' + LResponse);
+  Res.Send(LResponse);
+end;
+
+procedure TControllerBase.DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse);
+begin
+  Res.Send(Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
 end;
 
 function TControllerBase.GetJsonDefaultError(const pMsg, pDetailedMsg: string; pStatusCode: THTTPStatus): String;

@@ -69,15 +69,14 @@ end;
 
 function TSQLMaker<T>.Delete(var pSQL: String): ISQLMaker<T>;
 var
-  vClassName,
-  vWhere : String;
+  LClassName: String;
 begin
   Result := Self;
 
   TDataBaseRtti<T>.New(FInstance)
-    .TableName(vClassName);
+    .TableName(LClassName);
 
-  pSQL := pSQL + 'DELETE FROM ' + vClassName;
+  pSQL := pSQL + 'DELETE FROM ' + LClassName;
   if not FWhere.IsEmpty then
     pSQL := pSQL + ' WHERE ' + FWhere;
 end;
@@ -261,18 +260,17 @@ end;
 
 function TSQLMaker<T>.Update(var pSQL: String): ISQLMaker<T>;
 var
-  vClassName,
-  vUpdate,
-  vWhere : String;
+  LClassName,
+  LUpdate: String;
 begin
   Result := Self;
 
   TDataBaseRtti<T>.New(FInstance)
-    .TableName(vClassName)
-    .Update(vUpdate);
+    .TableName(LClassName)
+    .Update(LUpdate);
 
-  pSQL := pSQL + 'UPDATE ' + vClassName;
-  pSQL := pSQL + ' SET '   + vUpdate;
+  pSQL := pSQL + 'UPDATE ' + LClassName;
+  pSQL := pSQL + ' SET '   + LUpdate;
   if not FWhere.IsEmpty then
     pSQL := pSQL + ' WHERE ' + FWhere;
 end;
