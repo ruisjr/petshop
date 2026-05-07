@@ -22,7 +22,7 @@ type
 
     {procedures}
     procedure ValidadeInfoRequest(const pBody: TJSONObject);
-
+  published
     procedure DoPost(pResponse: String; Res: THorseResponse);
     procedure DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse);
     procedure DoGet(pResponse: String; Res: THorseResponse);
@@ -48,7 +48,7 @@ var
   LResponse: String;
 begin
   LResponse := Self.GetJsonDefaultSuccess(pResponse, THTTPStatus.OK);
-  Env.Log.Debug('DoGet | Response: ' + LResponse);
+  Env.Log.Debug(Self.MethodName(@TControllerBase.DoGet) + ' | Response: ' +LResponse);
   Res.Send(LResponse);
 end;
 
@@ -62,7 +62,7 @@ var
   LResponse: String;
 begin
   LResponse := Self.GetJsonDefaultSuccess(pResponse, THTTPStatus.OK);
-  Env.Log.Debug('DoPost | Response: ' + LResponse);
+  Env.Log.Debug(Self.MethodName(@TControllerBase.DoGet) + ' | Response: ' +LResponse);
   Res.Send(LResponse);
 end;
 

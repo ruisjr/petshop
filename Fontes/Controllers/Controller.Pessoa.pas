@@ -31,8 +31,7 @@ uses
    System.JSON
   {Classes de Negócio}
   ,Core.Functions
-  ,Services.Pessoa
-  ,Core.Environment;
+  ,Services.Pessoa;
 
 { TControllerPessoa }
 
@@ -100,6 +99,8 @@ end;
 
 procedure Registry;
 begin
+  LController := TControllerPessoa.Create;
+
   {Métodos Get}
   THorse.Get('/pessoa', LController.DoGetPessoa);
   THorse.Get('/pessoas', LController.DoGetPessoas);
