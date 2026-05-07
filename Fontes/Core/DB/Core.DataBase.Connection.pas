@@ -91,7 +91,7 @@ begin
   except
     on E: Exception do
     begin
-      Env.Log.Error(Format('%s | %s #13#10 %s', [Self.UnitName, Self.MethodName(Self), E.Message]));
+      Env.Log.Error(Format('%s | %s', [Self.ClassName, E.Message]));
       raise Exception.Create('The connection to the database could not be opened.'+#13#10 + E.Message);
     end;
   end;
@@ -119,7 +119,7 @@ begin
     except
       on E : Exception do
       begin
-        Env.Log.Error(Format('%s | %s #13#10 %s', [Self.UnitName, Self.MethodName(Self), E.Message]));
+        Env.Log.Error(Format('%s | %s', [Self.ClassName, E.Message]));
         raise Exception.Create('The connection to the database could not be closed.' + #13#10 + E.Message);
       end;
     end;
@@ -182,37 +182,37 @@ begin
 
       FConnection.DriverName        := LArqIni.ReadString(FAppName, 'DriverID', 'PG');
       FConnection.ConnectionName    := FAppName;
-      FConnection.ConnectionDefName := FAppName;
-      FConnection.LoginPrompt       := False;
-      FConnection.Name              := 'conn' + FAppName;
+      FConnection.LoginPrompt       := True;
+      FConnection.Name              := 'Conn' + FAppName;
 
       with (TFDPhysPGConnectionDefParams(FConnection.Params)) do
       begin
-        Port            := LArqIni.ReadInteger(FAppName, 'Port', 5432);
-        Server          := LArqIni.ReadString(FAppName, 'Server', 'localhost');
-        DriverID        := LArqIni.ReadString(FAppName, 'DriverID', '');
-        Database        := LArqIni.ReadString(FAppName, 'Database', '');
-        Password        := LArqIni.ReadString(FAppName, 'Password', 'postgres');
-        UserName        := LArqIni.ReadString(FAppName, 'User_Name', 'postgres');
-        LoginTimeout    := LArqIni.ReadInteger(FAppName, 'Timeout', 30);
+        Port            := LArqIni.ReadInteger(FAppName, 'Port',      5432);
+        Server          := LArqIni.ReadString(FAppName,  'Server',    'localhost');
+        DriverID        := LArqIni.ReadString(FAppName,  'DriverID',  '');
+        Database        := LArqIni.ReadString(FAppName,  'Database',  '');
+        Password        := LArqIni.ReadString(FAppName,  'Password',  'postgres');
+        UserName        := LArqIni.ReadString(FAppName,  'User_Name', 'postgres');
+        LoginTimeout    := LArqIni.ReadInteger(FAppName, 'Timeout',   30);
         ApplicationName := FAppName;
         CharacterSet    := csUTF8;
       end;
 
       FConnection.Params.UserName := LArqIni.ReadString(FAppName, 'User_Name', 'postgres');
-      FConnection.Params.Password := LArqIni.ReadString(FAppName, 'Password', 'postgres');
+      FConnection.Params.Password := LArqIni.ReadString(FAppName, 'Password',  'postgres');
 
       Self.Connect;
 
-      Env.Log.Info(Self.UnitName + Format(' | Connected to the database %s.', [FConnection.ConnectionName]));
+      Env.Log.Info(Format('%s | Connected to the database %s.', [Self.ClassName, FConnection.ConnectionName]));
     finally
       FreeAndNil(LArqIni);
     end;
   except
     on E: Exception do
     begin
-      LMessage := Self.UnitName + ' | ' + Self.MethodName(Self) + #13#10 + E.Message + #13#10 + 'The application will be finalized.';
+      LMessage := Format('%s | %s #13#10. The application will be finalized.', [Self.ClassName, E.Message]);
       Env.Log.Error(LMessage);
+      Env.Log.Error(E.StackTrace);
       raise Exception.Create('The database connection data could not be loaded.' + #13#10 + E.Message);
     end;
   end;

@@ -23,10 +23,12 @@ type
     {procedures}
     procedure ValidadeInfoRequest(const pBody: TJSONObject);
   published
-    procedure DoPost(pResponse: String; Res: THorseResponse);
-    procedure DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse);
-    procedure DoGet(pResponse: String; Res: THorseResponse);
-    procedure DoGetError(pMsg, pDetailedMessage: String; Res: THorseResponse);
+    {Procedures}
+    procedure DoPost(pResponse: String; Res: THorseResponse); virtual;
+    procedure DoGet(pResponse: String; Res: THorseResponse); virtual;
+    {Errors}
+    procedure DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse); virtual;
+    procedure DoGetError(pMsg, pDetailedMessage: String; Res: THorseResponse); virtual;
   end;
 
 implementation
@@ -53,7 +55,11 @@ begin
 end;
 
 procedure TControllerBase.DoGetError(pMsg, pDetailedMessage: String; Res: THorseResponse);
+var
+  LResponse: String;
 begin
+  LResponse := Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest);
+  Env.Log.Debug(Self.MethodName(@TControllerBase.DoGetError) + ' | Response: ' +LResponse);
   Res.Send(Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
 end;
 
@@ -62,13 +68,17 @@ var
   LResponse: String;
 begin
   LResponse := Self.GetJsonDefaultSuccess(pResponse, THTTPStatus.OK);
-  Env.Log.Debug(Self.MethodName(@TControllerBase.DoGet) + ' | Response: ' +LResponse);
+  Env.Log.Debug(Self.MethodName(@TControllerBase.DoPost) + ' | Response: ' +LResponse);
   Res.Send(LResponse);
 end;
 
 procedure TControllerBase.DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse);
+var
+  LResponse: String;
 begin
-  Res.Send(Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
+  LResponse := Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest);
+  Env.Log.Debug(Self.MethodName(@TControllerBase.DoPostError) + ' | Response: ' +LResponse);
+  Res.Send(LResponse).Status(Integer(THTTPStatus.BadRequest));
 end;
 
 function TControllerBase.GetJsonDefaultError(const pMsg, pDetailedMsg: string; pStatusCode: THTTPStatus): String;

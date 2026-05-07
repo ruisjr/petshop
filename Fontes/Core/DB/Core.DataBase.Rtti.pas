@@ -75,7 +75,10 @@ type
 implementation
 
 Uses
-  Vcl.StdCtrls;
+  {Classes de Sistema}
+   Vcl.Graphics
+  ,Vcl.StdCtrls
+  ,System.UITypes;
 
 { TDataBaseRtti<T> }
 

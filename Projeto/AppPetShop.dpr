@@ -31,7 +31,9 @@ uses
   Entidade.Pessoa in '..\Fontes\Entidades\Entidade.Pessoa.pas',
   Controller.Pessoa in '..\Fontes\Controllers\Controller.Pessoa.pas',
   Services.Pessoa in '..\Fontes\Services\Services.Pessoa.pas',
-  Controller.Especie in '..\Fontes\Controllers\Controller.Especie.pas';
+  Controller.Especie in '..\Fontes\Controllers\Controller.Especie.pas',
+  Services.Especie in '..\Fontes\Services\Services.Especie.pas',
+  Entidade.Especie in '..\Fontes\Entidades\Entidade.Especie.pas';
 
 {$R *.res}
 

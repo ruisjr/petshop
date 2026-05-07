@@ -31,8 +31,7 @@ uses
    System.JSON
   {Classes de Negócio}
   ,Core.Functions
-  ,Services.Users
-  ,Core.Environment;
+  ,Services.Users;
 
 procedure TControllerUser.DoGetUser(Req: THorseRequest; Res: THorseResponse);
 var
@@ -94,6 +93,8 @@ end;
 
 procedure Registry;
 begin
+  LController := TControllerUser.Create;
+
   {Métodos Get}
   THorse.Get('/user', LController.DoGetUser);
   THorse.Get('/users', LController.DoGetUsers);

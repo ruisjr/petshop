@@ -66,9 +66,13 @@ begin
   FEventoParada := TEvent.Create(nil, True, False, '');
   Env.Log.Info('Iniciando serviço.');
   try
-    THorse.Listen(GetPortService);
-    Started := True;
-    Env.Log.Info('Serviço iniciado com sucesso.');
+    if not THorse.IsRunning then
+    begin
+      THorse.Listen(GetPortService);
+      Env.Log.Debug(Format('Serviço iniciado na porta %d.', [GetPortService]));
+      Started := True;
+      Env.Log.Info('Serviço iniciado com sucesso.');
+    end;
   except
     on E: Exception do
       begin
@@ -86,10 +90,11 @@ begin
   FreeAndNil(FEventoParada);
 
   if THorse.IsRunning then
+  begin
     THorse.StopListen;
-
-  Stopped := True;
-  Env.Log.Info('Serviço parado com sucesso.');
+    Stopped := True;
+    Env.Log.Debug('Serviço finalizado com sucesso.');
+  end;
 end;
 
 end.

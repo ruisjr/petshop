@@ -39,7 +39,6 @@ procedure TControllerPessoa.DoGetPessoa(Req: THorseRequest; Res: THorseResponse)
 var
   LBody: TJsonObject;
   LService: TServicePessoa;
-  LResponse: String;
 begin
   LService := TServicePessoa.Create;
   try
@@ -63,8 +62,6 @@ end;
 procedure TControllerPessoa.DoGetPessoas(Req: THorseRequest; Res: THorseResponse);
 var
   LService: TServicePessoa;
-  LResponse: String;
-  LMetodo: String;
 begin
   LService := TServicePessoa.Create;
   try
@@ -82,7 +79,6 @@ end;
 procedure TControllerPessoa.DoPostPessoa(Req: THorseRequest; Res: THorseResponse);
 var
   LService: TServicePessoa;
-  LResponse: String;
 begin
   LService := TServicePessoa.Create;
   try

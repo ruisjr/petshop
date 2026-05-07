@@ -1,16 +1,13 @@
 program SrvPetShop;
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Vcl.SvcMgr,
   SrvPetShopWindows in '..\Fontes\Server\SrvPetShopWindows.pas' {SrvPetShopApp: TService},
-  Core.Api in '..\Fontes\Core\Core.Api.pas',
-  Core.Email in '..\Fontes\Core\Core.Email.pas',
-  Core.Environment in '..\Fontes\Core\Core.Environment.pas',
-  Core.Exceptions in '..\Fontes\Core\Core.Exceptions.pas',
-  Core.Functions in '..\Fontes\Core\Core.Functions.pas',
-  Core.Global in '..\Fontes\Core\Core.Global.pas',
-  Core.Logs in '..\Fontes\Core\Core.Logs.pas',
-  Core.Servico in '..\Fontes\Core\Core.Servico.pas',
   Core.DataBase.Interfaces in '..\Fontes\Core\DB\Interfaces\Core.DataBase.Interfaces.pas',
   Core.DataBase.Access in '..\Fontes\Core\DB\Core.DataBase.Access.pas',
   Core.DataBase.Connection in '..\Fontes\Core\DB\Core.DataBase.Connection.pas',
@@ -21,10 +18,27 @@ uses
   Core.DataBase.Types in '..\Fontes\Core\DB\Core.DataBase.Types.pas',
   Core.Entidades.CustomAttributes in '..\Fontes\Core\Entidades\Core.Entidades.CustomAttributes.pas',
   Core.Entidades.ModelBase in '..\Fontes\Core\Entidades\Core.Entidades.ModelBase.pas',
-  Core.Thread in '..\Fontes\Core\Core.Thread.pas',
+  Services.Especie in '..\Fontes\Services\Services.Especie.pas',
+  Services.Pessoa in '..\Fontes\Services\Services.Pessoa.pas',
   Services.Users in '..\Fontes\Services\Services.Users.pas',
+  Controller.Base in '..\Fontes\Controllers\Controller.Base.pas',
+  Controller.Especie in '..\Fontes\Controllers\Controller.Especie.pas',
+  Controller.Pessoa in '..\Fontes\Controllers\Controller.Pessoa.pas',
+  Controller.User in '..\Fontes\Controllers\Controller.User.pas',
+  Entidade.Especie in '..\Fontes\Entidades\Entidade.Especie.pas',
+  Entidade.Pessoa in '..\Fontes\Entidades\Entidade.Pessoa.pas',
   Entidade.Usuario in '..\Fontes\Entidades\Entidade.Usuario.pas',
-  Core.Rest.JsonHelper in '..\Fontes\Core\Core.Rest.JsonHelper.pas';
+  DTO.Usuario in '..\Fontes\DTOs\DTO.Usuario.pas',
+  Core.Api in '..\Fontes\Core\Core.Api.pas',
+  Core.Email in '..\Fontes\Core\Core.Email.pas',
+  Core.Environment in '..\Fontes\Core\Core.Environment.pas',
+  Core.Exceptions in '..\Fontes\Core\Core.Exceptions.pas',
+  Core.Functions in '..\Fontes\Core\Core.Functions.pas',
+  Core.Global in '..\Fontes\Core\Core.Global.pas',
+  Core.Logs in '..\Fontes\Core\Core.Logs.pas',
+  Core.Rest.JsonHelper in '..\Fontes\Core\Core.Rest.JsonHelper.pas',
+  Core.Servico in '..\Fontes\Core\Core.Servico.pas',
+  Core.Thread in '..\Fontes\Core\Core.Thread.pas';
 
 {$R *.RES}
 
