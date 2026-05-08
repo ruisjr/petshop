@@ -4,15 +4,19 @@ interface
 
 uses
   {Classes de Sistema}
-  System.JSON;
+   System.JSON
+  ,System.Classes
+  {Classes de Negócio}
+  ,Core.Services.Interfaces;
 
 type
-  TServicePessoa = class
+  TServicePessoa = class(TInterfacedPersistent, IService)
   strict private
   public
-    function GetPessoa(const id: Integer): String;
-    function GetPessoas(): String;
-    function PostPessoa(const pBody: String): String;
+    function GetService(const id: Integer): String;
+    function GetServices(): String;
+
+    function PostService(const ABody: TJSONObject): String;
   end;
 
 
@@ -33,7 +37,7 @@ uses
 
 { TServicePessoa }
 
-function TServicePessoa.GetPessoa(const id: Integer): String;
+function TServicePessoa.GetService(const id: Integer): String;
 var
   LPessoa: TPessoa;
   LDAO: IDataBaseDAO<TPessoa>;
@@ -59,7 +63,7 @@ begin
   end;
 end;
 
-function TServicePessoa.GetPessoas: String;
+function TServicePessoa.GetServices: String;
 var
   LPessoaList: TObjectList<TPessoa>;
   LDAO: IDataBaseDAO<TPessoa>;
@@ -86,14 +90,14 @@ begin
   end;
 end;
 
-function TServicePessoa.PostPessoa(const pBody: String): String;
+function TServicePessoa.PostService(const ABody: TJSONObject): String;
 var
   LDAO: IDataBaseDAO<TPessoa>;
   LPessoa: TPessoa;
 begin
   LDAO := TDataBaseDAO<TPessoa>.Create;
   try
-    LPessoa := TJson.JsonToObject<TPessoa>(TJSONObject(TJSONObject.ParseJSONValue(pBody)));
+    LPessoa := TJson.JsonToObject<TPessoa>(ABody);
     try
       Env.Connection.BeginTransaction;
       try

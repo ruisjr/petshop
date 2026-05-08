@@ -8,27 +8,32 @@ uses
   ,System.JSON
   ,Horse.Commons
   ,System.Classes
-  ,System.SysUtils;
+  ,System.SysUtils
+  {Classes de Negócio}
+  ,Core.Services.Interfaces;
 
 type
-  TControllerBase = class(TPersistent)
+  TControllerBase = class(TInterfacedPersistent, IController)
   strict private
+    FService: IService;
     {Functions}
     function GetJsonDefaultError(const pMsg, pDetailedMsg: string; pStatusCode: THTTPStatus): String;
     function GetJsonDefaultSuccess(const pJson: String; pStatusCode: THTTPStatus): String;
-  public
-    {Construtores e Destrutores}
-    constructor Create; reintroduce;
 
     {procedures}
     procedure ValidadeInfoRequest(const pBody: TJSONObject);
-  published
-    {Procedures}
-    procedure DoPost(pResponse: String; Res: THorseResponse); virtual;
-    procedure DoGet(pResponse: String; Res: THorseResponse); virtual;
+
     {Errors}
-    procedure DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse); virtual;
-    procedure DoGetError(pMsg, pDetailedMessage: String; Res: THorseResponse); virtual;
+    procedure DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse);
+    procedure DoGetError(pMsg, pDetailedMessage: String; Res: THorseResponse);
+    procedure DoSend(pResponse: String; Res: THorseResponse); virtual;
+  public
+    {Construtores e Destrutores}
+    constructor Create(AService: IService); reintroduce;
+
+  published
+    procedure DoPost(Req: THorseRequest; Res: THorseResponse);
+    procedure DoGet(Req: THorseRequest; Res: THorseResponse);
   end;
 
 implementation
@@ -40,17 +45,18 @@ uses
 
 { TServiceBase }
 
-constructor TControllerBase.Create;
+constructor TControllerBase.Create(AService: IService);
 begin
+  FService := AService;
   inherited Create;
 end;
 
-procedure TControllerBase.DoGet(pResponse: String; Res: THorseResponse);
+procedure TControllerBase.DoSend(pResponse: String; Res: THorseResponse);
 var
   LResponse: String;
 begin
   LResponse := Self.GetJsonDefaultSuccess(pResponse, THTTPStatus.OK);
-  Env.Log.Debug(Self.MethodName(@TControllerBase.DoGet) + ' | Response: ' +LResponse);
+  Env.Log.Debug(Self.MethodName(@TControllerBase.DoSend) + ' | Response: ' +LResponse);
   Res.Send(LResponse);
 end;
 
@@ -63,13 +69,22 @@ begin
   Res.Send(Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
 end;
 
-procedure TControllerBase.DoPost(pResponse: String; Res: THorseResponse);
+procedure TControllerBase.DoGet(Req: THorseRequest; Res: THorseResponse);
 var
-  LResponse: String;
+  LBody: TJsonObject;
 begin
-  LResponse := Self.GetJsonDefaultSuccess(pResponse, THTTPStatus.OK);
-  Env.Log.Debug(Self.MethodName(@TControllerBase.DoPost) + ' | Response: ' +LResponse);
-  Res.Send(LResponse);
+  try
+    LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
+    try
+      Self.ValidadeInfoRequest(LBody);
+      Self.DoSend(FService.GetService(LBody.GetValue<Integer>('id')), Res);
+    finally
+      LBody.ClearAndFreeItems;
+    end;
+  except
+    on E: Exception do
+      Self.DoGetError('Ocorreu erro ao processar a solicitação', E.Message, Res);
+  end;
 end;
 
 procedure TControllerBase.DoPostError(pMsg, pDetailedMessage: String; Res: THorseResponse);
@@ -79,6 +94,23 @@ begin
   LResponse := Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest);
   Env.Log.Debug(Self.MethodName(@TControllerBase.DoPostError) + ' | Response: ' +LResponse);
   Res.Send(LResponse).Status(Integer(THTTPStatus.BadRequest));
+end;
+
+procedure TControllerBase.DoPost(Req: THorseRequest; Res: THorseResponse);
+var
+  LJsonObj: TJSONObject;
+begin
+  LJsonObj := TJSONObject(TJSONObject.ParseJSONValue(Req.Body));
+  try
+    try
+      Self.DoSend(FService.PostService(LJsonObj), Res);
+    except
+      on E: Exception do
+        Self.DoPostError('Ocorreu erro ao processar a solicitação', E.Message, Res);
+    end;
+  finally
+    LJsonObj.ClearAndFreeItems;
+  end;
 end;
 
 function TControllerBase.GetJsonDefaultError(const pMsg, pDetailedMsg: string; pStatusCode: THTTPStatus): String;

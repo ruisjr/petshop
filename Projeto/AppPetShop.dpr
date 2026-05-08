@@ -33,7 +33,8 @@ uses
   Services.Pessoa in '..\Fontes\Services\Services.Pessoa.pas',
   Controller.Especie in '..\Fontes\Controllers\Controller.Especie.pas',
   Services.Especie in '..\Fontes\Services\Services.Especie.pas',
-  Entidade.Especie in '..\Fontes\Entidades\Entidade.Especie.pas';
+  Entidade.Especie in '..\Fontes\Entidades\Entidade.Especie.pas',
+  Core.Services.Interfaces in '..\Fontes\Core\Services\Core.Services.Interfaces.pas';
 
 {$R *.res}
 

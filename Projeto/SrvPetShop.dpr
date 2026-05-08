@@ -1,11 +1,6 @@
 program SrvPetShop;
 
 uses
-  madExcept,
-  madLinkDisAsm,
-  madListHardware,
-  madListProcesses,
-  madListModules,
   Vcl.SvcMgr,
   SrvPetShopWindows in '..\Fontes\Server\SrvPetShopWindows.pas' {SrvPetShopApp: TService},
   Core.DataBase.Interfaces in '..\Fontes\Core\DB\Interfaces\Core.DataBase.Interfaces.pas',
@@ -38,7 +33,8 @@ uses
   Core.Logs in '..\Fontes\Core\Core.Logs.pas',
   Core.Rest.JsonHelper in '..\Fontes\Core\Core.Rest.JsonHelper.pas',
   Core.Servico in '..\Fontes\Core\Core.Servico.pas',
-  Core.Thread in '..\Fontes\Core\Core.Thread.pas';
+  Core.Thread in '..\Fontes\Core\Core.Thread.pas',
+  Core.Services.Interfaces in '..\Fontes\Core\Services\Core.Services.Interfaces.pas';
 
 {$R *.RES}
 

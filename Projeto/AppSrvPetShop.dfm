@@ -15,7 +15,9 @@ object FrmPrincipal: TFrmPrincipal
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  KeyPreview = True
   OldCreateOrder = True
+  OnClose = FormClose
   PixelsPerInch = 96
   TextHeight = 15
   object lblPorta: TLabel

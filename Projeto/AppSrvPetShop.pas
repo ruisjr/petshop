@@ -25,6 +25,7 @@ type
     spePorta: TSpinEdit;
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
   public
@@ -47,7 +48,7 @@ begin
   if not THorse.IsRunning then
   begin
     THorse.Listen(spePorta.Value);
-    Env.Log.Debug(Format('Serviço iniciado na porta %d.', [spePorta.Value]));
+    Env.Log.Info(Format('Serviço iniciado na porta %d.', [spePorta.Value]));
   end;
 end;
 
@@ -56,8 +57,13 @@ begin
   if THorse.IsRunning then
   begin
     THorse.StopListen;
-    Env.Log.Debug('Serviço finalizado com sucesso.');
+    Env.Log.Info('Serviço finalizado com sucesso.');
   end;
+end;
+
+procedure TFrmPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  btnStopClick(Sender);
 end;
 
 end.
