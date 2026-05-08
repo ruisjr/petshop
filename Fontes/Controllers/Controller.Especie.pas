@@ -37,7 +37,7 @@ begin
 
   {Métodos Get}
   THorse.Get('/pet/especie',  LController.DoGet);
-//  THorse.Get('/pet/especies', LController.DoGetEspecies);
+  THorse.Get('/pet/especies', LController.DoGet);
 end;
 
 procedure UnRegistry;

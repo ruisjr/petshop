@@ -28,6 +28,7 @@ uses
   {Classes de Negócio}
   ,Entidade.Usuario
   ,Core.Environment
+  ,Core.DataBase.Types
   ,Core.Rest.JsonHelper
   ,Core.DataBase.Access
   ,Core.DataBase.Interfaces;
@@ -35,8 +36,33 @@ uses
 { TServiceUsuario }
 
 function TServiceUsuario.GetService(const id: Integer): String;
+var
+  LUsuarioList: TObjectList<TUsuario>;
+  LDAO: IDataBaseDAO<TUsuario>;
 begin
-  inherited;
+  LDAO := TDataBaseDAO<TUsuario>.Create;
+  try
+    try
+      LUsuarioList := LDAO
+                        .Fields('id, nome, login, data_cadastro, data_ultimo_acesso, email, bloqueado, ativo, primeiro_acesso')
+                        .Where('id', OtEqual, id)
+                      .ToList(50, 1);
+      try
+        Result := TJson.ObjectListToString<TUsuario>(LUsuarioList);
+      finally
+        LUsuarioList.Clear;
+        FreeAndNil(LUsuarioList);
+      end;
+    except
+      on E: Exception do
+      begin
+        Env.Log.Error(E.Message);
+        raise Exception.Create('Error: Não foi possível recuperar usuários da base de dados.');
+      end;
+    end;
+  finally
+    LDAO.FreeMemory;
+  end;
 end;
 
 function TServiceUsuario.GetServices(): String;

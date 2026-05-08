@@ -76,8 +76,13 @@ begin
   try
     LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
     try
-      Self.ValidadeInfoRequest(LBody);
-      Self.DoSend(FService.GetService(LBody.GetValue<Integer>('id')), Res);
+      if Assigned(LBody) then
+      begin
+        Self.ValidadeInfoRequest(LBody);
+        Self.DoSend(FService.GetService(LBody.GetValue<Integer>('id')), Res);
+      end
+      else
+        Self.DoSend(FService.GetServices(), Res);
     finally
       LBody.ClearAndFreeItems;
     end;

@@ -8,13 +8,12 @@ uses
   ,Horse.Commons
   ,System.SysUtils
   {Classes de Negócio}
-  ,Controller.Base;
+  ,Controller.Base
+  ,Core.Services.Interfaces;
 
-type
-  TControllerPessoa = class(TControllerBase);
 
 var
-  LController: TControllerPessoa;
+  LController: IController;
 
 procedure Registry;
 procedure UnRegistry;
@@ -31,19 +30,19 @@ uses
 
 procedure Registry;
 begin
-  LController := TControllerPessoa.Create(TServicePessoa.Create);
+  LController := TControllerBase.Create(TServicePessoa.Create);
 
   {Métodos Get}
-  THorse.Get('/pessoa', LController.DoGet);
-//  THorse.Get('/pessoas', LController.DoGetPessoas);
+  THorse.Get('/pessoa', TControllerBase(LController).DoGet);
+  THorse.Get('/pessoas', TControllerBase(LController).DoGet);
 
   {Métodos Post}
-  THorse.Post('/pessoa', LController.DoPost);
+  THorse.Post('/pessoa', TControllerBase(LController).DoPost);
 end;
 
 procedure UnRegistry;
 begin
-  FreeAndNil(LController);
+  LController := nil;
 end;
 
 initialization

@@ -10,7 +10,6 @@ type
   IController = interface
     ['{1173182C-A2D3-4ADB-94D4-CFF10F6A43B0}']
     procedure DoPost(Req: THorseRequest; Res: THorseResponse);
-//    procedure DoGetItem(Req: THorseRequest; Res: THorseResponse);
     procedure DoGet(Req: THorseRequest; Res: THorseResponse);
   end;
 

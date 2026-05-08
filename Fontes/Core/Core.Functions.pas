@@ -349,6 +349,9 @@ var
   vIx: Integer;
   vPar: TJSONPair;
 begin
+  if not Assigned(Self) then
+    Exit;
+
   for vIx := Self.Count - 1 downto 0 do
   begin
     vPar := Self.Pairs[vIx];
