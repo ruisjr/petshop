@@ -34,6 +34,7 @@ type
   published
     procedure DoPost(Req: THorseRequest; Res: THorseResponse);
     procedure DoGet(Req: THorseRequest; Res: THorseResponse);
+    procedure DoGets(Req: THorseRequest; Res: THorseResponse);
   end;
 
 implementation
@@ -69,6 +70,23 @@ begin
   Res.Send(Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
 end;
 
+procedure TControllerBase.DoGets(Req: THorseRequest; Res: THorseResponse);
+var
+  LBody: TJsonObject;
+begin
+  try
+    LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
+    try
+      Self.DoSend(FService.GetServices(), Res);
+    finally
+      LBody.ClearAndFreeItems;
+    end;
+  except
+    on E: Exception do
+      Self.DoGetError('Ocorreu erro ao processar a solicitação', E.Message, Res);
+  end;
+end;
+
 procedure TControllerBase.DoGet(Req: THorseRequest; Res: THorseResponse);
 var
   LBody: TJsonObject;
@@ -76,13 +94,8 @@ begin
   try
     LBody := TJsonObject(TJsonObject.ParseJSONValue(Req.Body));
     try
-      if Assigned(LBody) then
-      begin
-        Self.ValidadeInfoRequest(LBody);
-        Self.DoSend(FService.GetService(LBody.GetValue<Integer>('id')), Res);
-      end
-      else
-        Self.DoSend(FService.GetServices(), Res);
+      Self.ValidadeInfoRequest(LBody);
+      Self.DoSend(FService.GetService(LBody.GetValue<Integer>('id')), Res);
     finally
       LBody.ClearAndFreeItems;
     end;

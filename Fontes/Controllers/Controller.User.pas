@@ -5,16 +5,11 @@ interface
 uses
   {Classes de Sistema}
    Horse
-  ,Horse.Commons
-  ,System.SysUtils
   {Classes de Negócio}
   ,Controller.Base;
 
-type
-  TControllerUser = class(TControllerBase);
-
 var
-  LController: TControllerUser;
+  LController: TControllerBase;
 
 procedure Registry;
 procedure UnRegistry;
@@ -30,19 +25,19 @@ uses
 
 procedure Registry;
 begin
-  LController := TControllerUser.Create(TServiceUsuario.Create);
+  LController := TControllerBase.Create(TServiceUsuario.Create);
 
   {Métodos Get}
-  THorse.Get('/user', LController.DoGet);
-  THorse.Get('/users', LController.DoGet);
+  THorse.Get('/user', TControllerBase(LController).DoGet);
+  THorse.Get('/users', TControllerBase(LController).DoGets);
 
   {Métodos Post}
-  THorse.Post('/user', LController.DoPost);
+  THorse.Post('/user', TControllerBase(LController).DoPost);
 end;
 
 procedure UnRegistry;
 begin
-  FreeAndNil(LController);
+  LController := nil;
 end;
 
 initialization

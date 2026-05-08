@@ -5,19 +5,14 @@ interface
 uses
   {Classes de Sistema}
    Horse
-  ,Horse.Commons
-  ,System.SysUtils
   {Classes de Negócio}
   ,Controller.Base;
-
-type
-  TControllerEspecie = class(TControllerBase);
 
   procedure Registry;
   procedure UnRegistry;
 
 var
-  LController: TControllerEspecie;
+  LController: TControllerBase;
 
 implementation
 
@@ -33,17 +28,16 @@ uses
 
 procedure Registry;
 begin
-  LController := TControllerEspecie.Create(TServiceEspecie.Create);
+  LController := TControllerBase.Create(TServiceEspecie.Create);
 
   {Métodos Get}
-  THorse.Get('/pet/especie',  LController.DoGet);
-  THorse.Get('/pet/especies', LController.DoGet);
+  THorse.Get('/pet/especie',  TControllerBase(LController).DoGet);
+  THorse.Get('/pet/especies', TControllerBase(LController).DoGets);
 end;
 
 procedure UnRegistry;
 begin
-  if Assigned(LController) then
-    FreeAndNil(LController);
+  LController := nil;
 end;
 
 initialization;

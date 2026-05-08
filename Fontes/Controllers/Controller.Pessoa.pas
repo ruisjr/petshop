@@ -5,8 +5,6 @@ interface
 uses
   {Classes de Sistema}
    Horse
-  ,Horse.Commons
-  ,System.SysUtils
   {Classes de Negócio}
   ,Controller.Base
   ,Core.Services.Interfaces;
@@ -34,7 +32,7 @@ begin
 
   {Métodos Get}
   THorse.Get('/pessoa', TControllerBase(LController).DoGet);
-  THorse.Get('/pessoas', TControllerBase(LController).DoGet);
+  THorse.Get('/pessoas', TControllerBase(LController).DoGets);
 
   {Métodos Post}
   THorse.Post('/pessoa', TControllerBase(LController).DoPost);
