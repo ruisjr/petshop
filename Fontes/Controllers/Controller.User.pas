@@ -30,7 +30,7 @@ uses
 
 procedure Registry;
 begin
-//  LController := TControllerUser.Create;
+  LController := TControllerUser.Create(TServiceUsuario.Create);
 
   {Métodos Get}
   THorse.Get('/user', LController.DoGet);
