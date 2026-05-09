@@ -20,8 +20,6 @@ INSERT INTO especie VALUES (nextval('especie_seq'), 'AVE');
 SELECT * FROM especie;
 
 
-SELECT id, nome, porte, pelagem, id_especie   FROM especie WHERE id = :PAR_id LIMIT 1
-
 DROP TABLE IF EXISTS raca;
 DROP SEQUENCE IF EXISTS raca_seq;
 
@@ -44,7 +42,7 @@ ALTER TABLE raca ADD CONSTRAINT fk_raca_especie_id FOREIGN KEY (id_especie) REFE
 ALTER TABLE raca ADD CONSTRAINT chk_pelagem CHECK (pelagem IN ('CURTO', 'MEDIO', 'LONGO'));
 CREATE UNIQUE INDEX idx_raca ON usuario (id, nome);
 
-INSERT INTO raca VALUES (nextval('raca_seq'), 8, 'SHITZU', 'CURTO', 'P');
+INSERT INTO raca VALUES (nextval('raca_seq'), 1, 'SHITZU', 'CURTO', 'P');
 
 SELECT * FROM raca;
 

@@ -1,10 +1,12 @@
-drop table petshop.estado;
+DROP TABLE estado;
 
-create table petshop.estado(
-	id			integer 		not null,
-    cod_ibge	integer 		not null,
-    sigla		varchar(2) 	    not null
+CREATE TABLE estado(
+    id          integer         NOT NULL,
+    cod_ibge    integer         NOT NULL,
+    sigla       varchar(2)      NOT NULL 
 );
 
-alter table petshop.estado add constraint pk_estado_id primary key (id);
-alter table petshop.estado add index idx_estado (cod_ibge, sigla);
+ALTER TABLE estado ADD CONSTRAINT pk_estado_id primary key (id);
+CREATE UNIQUE INDEX idx_estado ON estado (cod_ibge, sigla);
+
+SELECT * FROM estado;

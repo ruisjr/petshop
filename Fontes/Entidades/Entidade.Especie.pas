@@ -15,7 +15,7 @@ type
     FDescricao: String;
   public
     [DBField('id'), PK, NotNull, Seq('especie_seq')]
-    property ID:        Integer read FID        write FID;
+    property ID:   Integer read FID        write FID;
     [DBField('descricao'), NotNull]
     property Descricao: String  read FDescricao write FDescricao;
   end;

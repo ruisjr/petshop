@@ -1,9 +1,20 @@
-create table petshop.municipio(
-	id			integer 		not null,
-    cod_ibge	integer 		not null,
-    nome		varchar(100) 	not null,
-    uf			varchar(2)		not null
-);
+DROP TABLE IF EXISTS municipio;
+DROP SEQUENCE IF EXISTS municipio_seq;
 
-alter table petshop.municipio add constraint pk_municipio_id primary key (id);
-alter table petshop.municipio add index idx_municipio(cod_ibge);
+CREATE SEQUENCE municipio_seq
+    start 1 
+    increment 1 
+    NO MAXVALUE CACHE 1;
+
+CREATE TABLE municipio (
+     id             integer NOT NULL
+    ,cod_ibge       integer NOT NULL
+    ,macro_regiao   integer NOT NULL
+    ,nome           varchar(100) NOT NULL
+    ,cod_pais       integer
+);
+    
+ALTER TABLE municipio ADD CONSTRAINT pk_municipio PRIMARY KEY (id);
+CREATE UNIQUE INDEX idx_municipio ON municipio (cod_ibge);
+
+SELECT * FROM municipio;;

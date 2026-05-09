@@ -193,79 +193,86 @@ end;
 
 function TDataBaseRtti<T>.DataSetToEntity(pDataSet: TDataSet; out pEntity: T): IDataBaseRtti<T>;
 var
-  vObj: TObject;
-  vValue: TValue;
-  vField : TField;
-  vCtxRtti: TRttiContext;
-  vTypRtti: TRttiType;
-  vprpRtti,
-  vPrpFKType: TRttiProperty;
-  vMemoryStream: TMemoryStream;
+  LObj: TObject;
+  LValue: TValue;
+  LField : TField;
+  LCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LprpRtti,
+  LPrpFKType: TRttiProperty;
+  LMemoryStream: TMemoryStream;
+  LRttiInstance: TRttiInstanceType;
 begin
   Result := Self;
   pEntity := _CreateObjectByName(FInstance.ClassType.ClassName);
   pDataSet.First;
   while not pDataSet.Eof do
   begin
-    vCtxRtti := TRttiContext.Create;
+    LCtxRtti := TRttiContext.Create;
     try
-      for vField in pDataSet.Fields do
+      for LField in pDataSet.Fields do
       begin
-        vTypRtti := vCtxRtti.GetType(FInstance.Classtype);
-        for vprpRtti in vTypRtti.GetProperties do
+        LTypRtti := LCtxRtti.GetType(FInstance.Classtype);
+        for LprpRtti in LTypRtti.GetProperties do
         begin
-          if LowerCase(vprpRtti.FieldName) = LowerCase(vField.DisplayName) then
+          if LowerCase(LprpRtti.FieldName) = LowerCase(LField.DisplayName) then
           begin
-            case vprpRtti.PropertyType.TypeKind of
+            case LprpRtti.PropertyType.TypeKind of
               tkUnknown, tkString, tkWChar, tkLString, tkWString, tkUString:
-                vValue := vField.AsString;
+                LValue := LField.AsString;
               tkInteger, tkInt64:
-                vValue := vField.AsInteger;
+                LValue := LField.AsInteger;
               tkChar: ;
               tkEnumeration:
               begin
-                if (vprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(Boolean)) then
-                  vValue := vField.AsBoolean
+                if (LprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(Boolean)) then
+                  LValue := LField.AsBoolean
                 else
-                  vValue := vField.AsString;
+                  LValue := LField.AsString;
               end;
               tkFloat:
               begin
-                if ((vprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TDate)) or
-                    (vprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TDateTime))) then
-                  vValue := vField.AsDateTime
+                if ((LprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TDate)) or
+                    (LprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TDateTime))) then
+                  LValue := LField.AsDateTime
                 else
-                  vValue := vField.AsFloat;
+                  LValue := LField.AsFloat;
               end;
               tkSet: ;
               tkClass:
               begin
-                if vprpRtti.IsForeignKey then
+                if LprpRtti.IsForeignKey then
                 begin
-                  vObj := vprpRtti.GetValue(Pointer(pEntity)).AsObject;
-                  vPrpFKType := vprpRtti.GetFKField(vObj);
-                  if vPrpFKType <> nil then
-                    vValue := vObj;
+                  if LprpRtti.PropertyType.IsInstance then
+                  begin
+                    LValue := LprpRtti.GetValue(Pointer(pEntity));
+
+                    if (LValue.AsObject = nil) then
+                    begin
+                      LRttiInstance := LprpRtti.PropertyType.AsInstance;
+                      LValue := LRttiInstance.MetaclassType.Create;
+                    end;
+                  end;
                 end
                 else
                 begin
-                  if vprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TJSONObject) then
+                  if LprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TJSONObject) then
                   begin
-                    vValue := TJSONObject(TJSONObject.ParseJSONValue(vField.AsString));
-                    vprpRtti.SetValue(Pointer(pEntity), vValue);
+                    LValue := TJSONObject(TJSONObject.ParseJSONValue(LField.AsString));
+                    LprpRtti.SetValue(Pointer(pEntity), LValue);
                   end
-                  else if vprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TJSONArray) then
+                  else if LprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TJSONArray) then
                   begin
-                    vValue := TJSONArray(TJSONObject.ParseJSONValue(vField.AsString));
-                    vprpRtti.SetValue(Pointer(pEntity), vValue);
+                    LValue := TJSONArray(TJSONObject.ParseJSONValue(LField.AsString));
+                    LprpRtti.SetValue(Pointer(pEntity), LValue);
                   end
-                  else if (vprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TMemoryStream)) then
+                  else if (LprpRtti.GetValue(Pointer(pEntity)).TypeInfo = TypeInfo(TMemoryStream)) then
                   begin
-                    TBlobField(vField).SaveToStream(vMemoryStream);
-                    if vMemoryStream <> nil then
+                    TBlobField(LField).SaveToStream(LMemoryStream);
+                    if LMemoryStream <> nil then
                     begin
-                      vMemoryStream.Position := 0;
-                      vprpRtti.SetValue(Pointer(pEntity), vMemoryStream);
+                      LMemoryStream.Position := 0;
+                      LprpRtti.SetValue(Pointer(pEntity), LMemoryStream);
                     end;
                   end;
                 end;
@@ -280,13 +287,13 @@ begin
               tkPointer: ;
               tkProcedure: ;
             end;
-            if VPrpRtti.PropertyType.TypeKind <> tkClass then
-              vprpRtti.SetValue(Pointer(pEntity), vValue);
+            {if VPrpRtti.PropertyType.TypeKind <> tkClass then}
+              LprpRtti.SetValue(Pointer(pEntity), LValue);
           end;
         end;
       end;
     finally
-      vCtxRtti.Free;
+      LCtxRtti.Free;
     end;
     pDataSet.Next;
   end;
