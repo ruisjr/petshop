@@ -170,6 +170,9 @@
         <DCCReference Include="..\Fontes\Services\Services.Especie.pas"/>
         <DCCReference Include="..\Fontes\Entidades\Entidade.Especie.pas"/>
         <DCCReference Include="..\Fontes\Core\Services\Core.Services.Interfaces.pas"/>
+        <DCCReference Include="..\Fontes\Controllers\Controller.Raca.pas"/>
+        <DCCReference Include="..\Fontes\Services\Services.Raca.pas"/>
+        <DCCReference Include="..\Fontes\Entidades\Entidade.Raca.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -199,7 +202,12 @@
             </Delphi.Personality>
             <Deployment Version="4">
                 <DeployFile LocalName="C:\PetShop\Bin\AppPetShop.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="C:\PetShop\Bin\AppPetShop.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="C:\PetShop\Bin\AppPetShop.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>AppPetShop.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

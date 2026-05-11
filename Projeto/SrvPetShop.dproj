@@ -204,7 +204,6 @@
             </Delphi.Personality>
             <Deployment Version="4">
                 <DeployFile LocalName="C:\PetShop\Bin\SrvPetShop.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="C:\PetShop\Bin\SrvPetShop.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

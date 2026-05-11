@@ -38,6 +38,7 @@ type
     {Procedures}
     procedure Clear;
     procedure OnDataChange(Sender: TObject; Field: TField);
+    procedure LoadChildObjects(pEntity: T);
   public
     {Construtores e Destrutores}
     constructor Create; overload;
@@ -102,11 +103,6 @@ begin
   FFields := '';
   FParameters.Clear;
 end;
-
-//function TDataBaseDAO<T>.Connection: IDBConnection;
-//begin
-//  Result := vgDBConnection;
-//end;
 
 constructor TDataBaseDAO<T>.Create(const pEntity: T);
 begin
@@ -180,6 +176,24 @@ begin
   FLimit := pLimit.ToString();
 end;
 
+procedure TDataBaseDAO<T>.LoadChildObjects(pEntity: T);
+var
+  LObjPK: TObject;
+  LDict: TDictionary<String, TObject>;
+begin
+  {
+  1- Recuperar alista de objetos filho - OK
+  2- Procurar item a item pelo dataset
+
+  }
+  LDict := TDataBaseRtti<T>.New(FEntity).LoadObjectForeignKey(pEntity);
+  LObjPK := LDict.ToArray[0].Value;
+//  Self.LoadDataFromParentObject(pEntity, LObjPK);
+  //Carregar o script sql
+  //Puxar as informações da base de dados a partir do FK
+
+end;
+
 procedure TDataBaseDAO<T>.OnDataChange(Sender: TObject; Field: TField);
 begin
   if (FList.Count > 0) and (FDataSource.DataSet.RecNo - 1 <= FList.Count) then
@@ -248,6 +262,9 @@ begin
     FQuery.Open;
 
     TDataBaseRtti<T>.New(FEntity).DataSetToEntity(FQuery.DataSet, Result);
+
+    {Validar se os próximos objetos são do tipo Class e preenche}
+    Self.LoadChildObjects(Result);
   finally
     Self.Clear;
 

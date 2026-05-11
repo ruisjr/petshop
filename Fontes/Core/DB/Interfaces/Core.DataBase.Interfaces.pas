@@ -121,6 +121,8 @@ type
     function BindFormToEntity(pForm : TForm; var pEntity: T): IDataBaseRtti<T>;
     function BindEntityToForm(pForm : TForm; const pEntity: T): IDataBaseRtti<T>;
     function BindValueToProperty(var pEntity: T;pPropertyName: string; pValue: TValue): IDataBaseRtti<T>;
+
+    function LoadObjectForeignKey(pEntity: T): TDictionary<String, TObject>;
   end;
 
 implementation

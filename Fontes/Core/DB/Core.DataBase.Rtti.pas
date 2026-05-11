@@ -69,6 +69,8 @@ type
     function BindFormToEntity(pForm : TForm; var pEntity: T): IDataBaseRtti<T>;
     function BindEntityToForm(pForm : TForm; const pEntity: T): IDataBaseRtti<T>;
     function BindValueToProperty(var pEntity: T; pPropertyName: string; pValue: TValue): IDataBaseRtti<T>;
+
+    function LoadObjectForeignKey(pEntity: T): TDictionary<String, TObject>;
   end;
 
 
@@ -193,13 +195,11 @@ end;
 
 function TDataBaseRtti<T>.DataSetToEntity(pDataSet: TDataSet; out pEntity: T): IDataBaseRtti<T>;
 var
-  LObj: TObject;
   LValue: TValue;
   LField : TField;
   LCtxRtti: TRttiContext;
   LTypRtti: TRttiType;
-  LprpRtti,
-  LPrpFKType: TRttiProperty;
+  LprpRtti: TRttiProperty;
   LMemoryStream: TMemoryStream;
   LRttiInstance: TRttiInstanceType;
 begin
@@ -252,6 +252,8 @@ begin
                       LRttiInstance := LprpRtti.PropertyType.AsInstance;
                       LValue := LRttiInstance.MetaclassType.Create;
                     end;
+
+
                   end;
                 end
                 else
@@ -639,6 +641,7 @@ end;
 
 function TDataBaseRtti<T>.ValueIsNil(const pValue: TValue): Boolean;
 begin
+  Result := False;
   case pValue.Kind of
     tkString, tkChar, tkWChar,
     tkLString, tkWString, tkUString:
@@ -990,6 +993,49 @@ begin
       raise EDataBaseRtti.Create('Property ' + pPropertyName + ' not found!');
   finally
     vCtxRttiEntity.Free;
+  end;
+end;
+
+function TDataBaseRtti<T>.LoadObjectForeignKey(pEntity: T): TDictionary<String, TObject>;
+var
+  LValue: TValue;
+  LCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LprpRtti: TRttiProperty;
+  LRttiInstance: TRttiInstanceType;
+begin
+  Result := TDictionary<String, TObject>.Create;
+  LCtxRtti := TRttiContext.Create;
+  try
+    LTypRtti := LCtxRtti.GetType(FInstance.Classtype);
+    for LprpRtti in LTypRtti.GetProperties do
+    begin
+      case LprpRtti.PropertyType.TypeKind of
+        tkClass:
+        begin
+          if LprpRtti.IsForeignKey then
+          begin
+            if LprpRtti.PropertyType.IsInstance then
+            begin
+              LValue := LprpRtti.GetValue(Pointer(pEntity));
+
+              if (LValue.AsObject = nil) then
+              begin
+                LRttiInstance := LprpRtti.PropertyType.AsInstance;
+                LValue := LRttiInstance.MetaclassType.Create;
+              end
+              else
+              begin
+                Result.AddOrSetValue(LprpRtti.FieldName, LValue.AsObject);
+                Exit(Result);
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  finally
+    LCtxRtti.Free;
   end;
 end;
 

@@ -34,7 +34,10 @@ uses
   Controller.Especie in '..\Fontes\Controllers\Controller.Especie.pas',
   Services.Especie in '..\Fontes\Services\Services.Especie.pas',
   Entidade.Especie in '..\Fontes\Entidades\Entidade.Especie.pas',
-  Core.Services.Interfaces in '..\Fontes\Core\Services\Core.Services.Interfaces.pas';
+  Core.Services.Interfaces in '..\Fontes\Core\Services\Core.Services.Interfaces.pas',
+  Controller.Raca in '..\Fontes\Controllers\Controller.Raca.pas',
+  Services.Raca in '..\Fontes\Services\Services.Raca.pas',
+  Entidade.Raca in '..\Fontes\Entidades\Entidade.Raca.pas';
 
 {$R *.res}
 
