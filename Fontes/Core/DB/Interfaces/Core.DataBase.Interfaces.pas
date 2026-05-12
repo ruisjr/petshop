@@ -103,6 +103,7 @@ type
   IDataBaseRtti<T: class> = interface
     ['{7E8CDFB6-A11D-44C7-A60E-012ABB2DB869}']
     function GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
+    function GetParameterFromPK: TDictionary<string, TValue>;
 
     function TableName(var pTableName: String): IDataBaseRtti<T>;
     function ClassName(var pClassName: String): IDataBaseRtti<T>;
@@ -114,6 +115,7 @@ type
 
     function DataSetToEntity (pDataSet : TDataSet; out pEntity : T) : IDataBaseRtti<T>;
     function DataSetToEntityList(vDataSet: TDataSet; var vList: TObjectList<T>): IDataBaseRtti<T>;
+    function ApplyEntityChildToParent(var pEntity: T; pEntityChild: T; pFieldName: String): IDataBaseRtti<T>;
 
     function DictionaryFields(var pDictionary : TDictionary<string, variant>) : IDataBaseRtti<T>;
     function DictionaryTypeFields(var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;

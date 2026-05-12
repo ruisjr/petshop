@@ -100,6 +100,7 @@ begin
     FQuery.Params.Assign(FParams);
 
   try
+    Env.Log.Debug(FQuery.SQL.Text);
     FQuery.Prepare;
     FQuery.ExecSQL;
   except
@@ -225,7 +226,11 @@ begin
   Result := Self;
 
   FQuery.Close;
+  FQuery.SQL.Clear;
   FQuery.SQL.Add(pSQL);
+  FQuery.Prepare;
+
+  Env.Log.Debug(FQuery.SQL.Text);
   FQuery.Open;
 end;
 
@@ -237,6 +242,7 @@ begin
   if Assigned(FParams) then
     FQuery.Params.Assign(FParams);
 
+  Env.Log.Debug(FQuery.SQL.Text);
   FQuery.Prepare;
   FQuery.Open;
 

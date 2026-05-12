@@ -39,6 +39,8 @@ type
     procedure Clear;
     procedure OnDataChange(Sender: TObject; Field: TField);
     procedure LoadChildObjects(pEntity: T);
+
+    function GetParameterChild(const pObjChild: T): TDictionary<String, TValue>;
   public
     {Construtores e Destrutores}
     constructor Create; overload;
@@ -132,13 +134,13 @@ end;
 
 procedure TDataBaseDAO<T>.Delete(pEntity: T);
 var
-  vSQL: String;
+  LSQL: String;
 begin
   try
-    TSQLMaker<T>.New(pEntity).Delete(vSQL);
+    TSQLMaker<T>.New(pEntity).Delete(LSQL);
 
     FQuery.SQL.Clear;
-    FQuery.SQL.Add(vSQL);
+    FQuery.SQL.Add(LSQL);
     FQuery.FillParameter(pEntity);
     FQuery.ExecSQL;
   except
@@ -149,13 +151,13 @@ end;
 
 procedure TDataBaseDAO<T>.Delete;
 var
-  vSQL: String;
+  LSQL: String;
 begin
   try
-    TSQLMaker<T>.New(FEntity).Where(FParameters).Delete(vSQL);
+    TSQLMaker<T>.New(FEntity).Where(FParameters).Delete(LSQL);
 
     FQuery.SQL.Clear;
-    FQuery.SQL.Add(vSQL);
+    FQuery.SQL.Add(LSQL);
     FQuery.FillParameter(FParameters);
     FQuery.ExecSQL;
   except
@@ -178,20 +180,46 @@ end;
 
 procedure TDataBaseDAO<T>.LoadChildObjects(pEntity: T);
 var
-  LObjPK: TObject;
+  LKey,
+  LSQL: String;
+  LObj: TObject;
   LDict: TDictionary<String, TObject>;
 begin
-  {
-  1- Recuperar alista de objetos filho - OK
-  2- Procurar item a item pelo dataset
-
-  }
   LDict := TDataBaseRtti<T>.New(FEntity).LoadObjectForeignKey(pEntity);
-  LObjPK := LDict.ToArray[0].Value;
-//  Self.LoadDataFromParentObject(pEntity, LObjPK);
-  //Carregar o script sql
-  //Puxar as informações da base de dados a partir do FK
 
+  if not Assigned(LDict) then
+    Exit;
+
+  for LKey in LDict.Keys do
+  begin
+    LObj := TObject(LDict[LKey]);
+    FParameters := Self.GetParameterChild(LObj);
+
+    FQuery.DataSet.DisableControls;
+    try
+      TSQLMaker<T>.New(LObj)
+        .Fields(FFields)
+        .Where(FParameters)
+        .GroupBy(FGroup)
+        .OrderBy(FOrder)
+        .Limit('1')
+      .Select(LSQL);
+
+      FQuery.SQL.Clear;
+      FQuery.SQL.Add(LSQL);
+      FQuery.FillParameter(FParameters);
+      FQuery.Open;
+
+      TDataBaseRtti<T>.New(LObj).DataSetToEntity(FQuery.DataSet, LObj);
+
+      TDataBaseRtti<T>.New(LObj).ApplyEntityChildToParent(pEntity, LObj, LKey);
+    finally
+      Self.Clear;
+
+      FQuery.DataSet.EnableControls;
+      FQuery.DataSet.Close;
+    end;
+  end;
 end;
 
 procedure TDataBaseDAO<T>.OnDataChange(Sender: TObject; Field: TField);
@@ -217,14 +245,14 @@ end;
 
 procedure TDataBaseDAO<T>.ToDataSet;
 var
-  vSQL: String;
+  LSQL: String;
 begin
-  TSQLMaker<T>.New(FEntity).Select(vSQL);
+  TSQLMaker<T>.New(FEntity).Select(LSQL);
 
   FQuery.DataSet.DisableControls;
   try
     FQuery.SQL.Clear;
-    FQuery.Open(vSQL);
+    FQuery.Open(LSQL);
   finally
     Self.Clear;
     FQuery.DataSet.EnableControls;
@@ -239,7 +267,7 @@ end;
 
 function TDataBaseDAO<T>.First: T;
 var
-  vSQL: String;
+  LSQL: String;
 begin
   if FSQL.IsEmpty then
   begin
@@ -249,15 +277,15 @@ begin
       .GroupBy(FGroup)
       .OrderBy(FOrder)
       .Limit('1')
-    .Select(vSQL);
+    .Select(LSQL);
   end
   else
-    vSQL := FSQL;
+    LSQL := FSQL;
 
   FQuery.DataSet.DisableControls;
   try
     FQuery.SQL.Clear;
-    FQuery.SQL.Add(vSQL);
+    FQuery.SQL.Add(LSQL);
     FQuery.FillParameter(FParameters);
     FQuery.Open;
 
@@ -309,6 +337,11 @@ begin
   FQuery.Open;
 
   Result := FQuery.Fields[0].AsInteger;
+end;
+
+function TDataBaseDAO<T>.GetParameterChild(const pObjChild: T): TDictionary<String, TValue>;
+begin
+  Result := TDataBaseRtti<T>.New(pObjChild).GetParameterFromPK;
 end;
 
 function TDataBaseDAO<T>.GroupBy(const pField: String): IDataBaseDAO<T>;

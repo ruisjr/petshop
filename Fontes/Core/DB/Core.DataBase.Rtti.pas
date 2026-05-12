@@ -33,12 +33,16 @@ type
     FInstance : T;
     FModeInsert: Boolean;
 
+    {Functions}
     function _CreateObjectByName(const AClassName: string): T;
     function _FloatFormat(pValue: String): Currency;
     function _BindValueToComponent(pComponent: TComponent; pValue : Variant): IDataBaseRtti<T>;
     function _BindValueToProperty(pEntity: T; pProperty: TRttiProperty; pValue : TValue): IDataBaseRtti<T>;
     function _GetRttiPropertyValue(pEntity: T; pPropertyName: String): Variant;
     function _GetComponentToValue(pComponent: TComponent): TValue;
+
+    {Procedures}
+    procedure _ApplyValueToChildEntity(FieldName: string; pObjChild: TObject; pField: TField);
   public
     {Construtores e Destrutores}
     constructor Create(pInstance: T);
@@ -49,23 +53,25 @@ type
 
     {Funções}
     function GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
+    function GetParameterFromPK: TDictionary<string, TValue>;
 
     function TableName(var pTableName: String): IDataBaseRtti<T>;
     function Sequence(var pSequence: String): IDataBaseRtti<T>;
     function ClassName(var pClassName: String): IDataBaseRtti<T>;
     function Fields(var pFields: String): IDataBaseRtti<T>;
-    function FieldsInsert(var aFields: String): IDataBaseRtti<T>;
+    function FieldsInsert(var pFields: String): IDataBaseRtti<T>;
     function Param(var pParam: String): IDataBaseRtti<T>;
     function Where(var pWhere: String): IDataBaseRtti<T>;
     function Update(var pUpdate: String): IDataBaseRtti<T>;
     function Values(pInstance: T; var pValues: String): IDataBaseRtti<T>;
 
     function DataSetToEntity(pDataSet: TDataSet; out pEntity: T): IDataBaseRtti<T>;
-    function DataSetToEntityList(vDataSet: TDataSet; var vList: TObjectList<T>): IDataBaseRtti<T>;
+    function DataSetToEntityList(pDataSet: TDataSet; var pList: TObjectList<T>): IDataBaseRtti<T>;
+    function ApplyEntityChildToParent(var pEntity: T; pEntityChild: T; pFieldName: String): IDataBaseRtti<T>;
 
     function DictionaryFields(var pDictionary: TDictionary<string, variant>): IDataBaseRtti<T>;
-    function DictionaryTypeFields(const pParameters: TDictionary<string, TValue>; var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
-    function DictionaryTypeFields(var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
+    function DictionaryTypeFields(const pParameters: TDictionary<string, TValue>; var pDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
+    function DictionaryTypeFields(var pDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>; overload;
     function BindFormToEntity(pForm : TForm; var pEntity: T): IDataBaseRtti<T>;
     function BindEntityToForm(pForm : TForm; const pEntity: T): IDataBaseRtti<T>;
     function BindValueToProperty(var pEntity: T; pPropertyName: string; pValue: TValue): IDataBaseRtti<T>;
@@ -86,44 +92,44 @@ Uses
 
 function TDataBaseRtti<T>.BindEntityToForm(pForm: TForm; const pEntity: T): IDataBaseRtti<T>;
 var
-  vTypRtti: TRttiType;
-  vPrpRtti: TRttiField;
-  vCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LPrpRtti: TRttiField;
+  LCtxRtti: TRttiContext;
 begin
   Result := Self;
 
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(pForm.ClassInfo);
-    for vPrpRtti in vTypRtti.GetFields do
+    LTypRtti := LCtxRtti.GetType(pForm.ClassInfo);
+    for LPrpRtti in LTypRtti.GetFields do
     begin
-      if vPrpRtti.Has<Bind> then
-        _BindValueToComponent(pForm.FindComponent(vPrpRtti.Name), _GetRttiPropertyValue(pEntity, vPrpRtti.GetAttribute<Bind>.Field));
+      if LPrpRtti.Has<Bind> then
+        _BindValueToComponent(pForm.FindComponent(LPrpRtti.Name), _GetRttiPropertyValue(pEntity, LPrpRtti.GetAttribute<Bind>.Field));
     end;
   finally
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
 function TDataBaseRtti<T>.BindFormToEntity(pForm: TForm; var pEntity: T): IDataBaseRtti<T>;
 var
-  vTypRtti: TRttiType;
-  vPrpRtti: TRttiField;
-  vCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LPrpRtti: TRttiField;
+  LCtxRtti: TRttiContext;
 begin
   Result := Self;
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(pForm.ClassInfo);
-    for vPrpRtti in vTypRtti.GetFields do
+    LTypRtti := LCtxRtti.GetType(pForm.ClassInfo);
+    for LPrpRtti in LTypRtti.GetFields do
     begin
-      if vPrpRtti.Has<Bind> then
+      if LPrpRtti.Has<Bind> then
       begin
-        _BindValueToProperty(pEntity, GetRttiProperty(pEntity, vPrpRtti.GetAttribute<Bind>.Field), _GetComponentToValue(pForm.FindComponent(vPrpRtti.Name)));
+        _BindValueToProperty(pEntity, GetRttiProperty(pEntity, LPrpRtti.GetAttribute<Bind>.Field), _GetComponentToValue(pForm.FindComponent(LPrpRtti.Name)));
       end;
     end;
   finally
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
@@ -138,16 +144,16 @@ end;
 
 function TDataBaseRtti<T>.ClassName(var pClassName: String): IDataBaseRtti<T>;
 var
-  vTypRtti: TRttiType;
-  vCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LCtxRtti: TRttiContext;
 begin
   Result := Self;
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
-    pClassName := Copy(vTypRtti.Name, 2, Length(vTypRtti.Name));
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    pClassName := Copy(LTypRtti.Name, 2, Length(LTypRtti.Name));
   finally
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
@@ -204,7 +210,9 @@ var
   LRttiInstance: TRttiInstanceType;
 begin
   Result := Self;
-  pEntity := _CreateObjectByName(FInstance.ClassType.ClassName);
+  if not Assigned(pEntity) then
+    pEntity := _CreateObjectByName(FInstance.ClassType.ClassName);
+
   pDataSet.First;
   while not pDataSet.Eof do
   begin
@@ -252,8 +260,9 @@ begin
                       LRttiInstance := LprpRtti.PropertyType.AsInstance;
                       LValue := LRttiInstance.MetaclassType.Create;
                     end;
-
-
+                    //Campo(Obj), LprpRtti.FieldName, Valor
+                    {Aplicar o valor da primary Key no campo respectivo para PK}
+                    Self._ApplyValueToChildEntity(LprpRtti.FieldName, LValue.AsObject, LField);
                   end;
                 end
                 else
@@ -289,8 +298,8 @@ begin
               tkPointer: ;
               tkProcedure: ;
             end;
-            {if VPrpRtti.PropertyType.TypeKind <> tkClass then}
-              LprpRtti.SetValue(Pointer(pEntity), LValue);
+
+            LprpRtti.SetValue(Pointer(pEntity), LValue);
           end;
         end;
       end;
@@ -302,7 +311,48 @@ begin
   pDataSet.First;
 end;
 
-function TDataBaseRtti<T>.DataSetToEntityList(vDataSet: TDataSet; var vList: TObjectList<T>): IDataBaseRtti<T>;
+function TDataBaseRtti<T>.ApplyEntityChildToParent(var pEntity: T; pEntityChild: T; pFieldName: String): IDataBaseRtti<T>;
+var
+  LCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LprpRtti: TRttiProperty;
+begin
+  Result := Self;
+
+  LCtxRtti := TRttiContext.Create;
+  try
+    LTypRtti := LCtxRtti.GetType(pEntity.Classtype);
+    for LprpRtti in LTypRtti.GetProperties do
+    begin
+      case LprpRtti.PropertyType.TypeKind of
+        tkClass:
+        begin
+          if LprpRtti.IsForeignKey then
+          begin
+            if (LprpRtti.FieldName.Equals(pFieldName)) then
+            begin
+              if LprpRtti.PropertyType.IsInstance then
+                LprpRtti.SetValue(Pointer(pEntity), TObject(pEntityChild));
+            end;
+          end;
+        end;
+        tkMethod: ;
+        tkVariant: ;
+        tkArray: ;
+        tkRecord: ;
+        tkInterface: ;
+        tkDynArray: ;
+        tkClassRef: ;
+        tkPointer: ;
+        tkProcedure: ;
+      end;
+    end;
+  finally
+    LCtxRtti.Free;
+  end;
+end;
+
+function TDataBaseRtti<T>.DataSetToEntityList(pDataSet: TDataSet; var pList: TObjectList<T>): IDataBaseRtti<T>;
 var
   vInfo: PTypeInfo;
   vValue: TValue;
@@ -311,14 +361,14 @@ var
   VPrpRtti: TRttiProperty;
 begin
   Result := Self;
-  vList.Clear;
-  while not vDataSet.Eof do
+  pList.Clear;
+  while not pDataSet.Eof do
   begin
     vInfo := System.TypeInfo(T);
-    vList.Add(T.Create);
+    pList.Add(T.Create);
     vCtxRtti := TRttiContext.Create;
     try
-      for vField in vDataSet.Fields do
+      for vField in pDataSet.Fields do
       begin
         for VPrpRtti in vCtxRtti.GetType(vInfo).GetProperties do
         begin
@@ -353,16 +403,16 @@ begin
               tkProcedure: ;
             end;
             if VPrpRtti.PropertyType.TypeKind <> tkClass then
-              VPrpRtti.SetValue(Pointer(vList[Pred(vList.Count)]), vValue);
+              VPrpRtti.SetValue(Pointer(pList[Pred(pList.Count)]), vValue);
           end;
         end;
       end;
     finally
       vCtxRtti.Free;
     end;
-    vDataSet.Next;
+    pDataSet.Next;
   end;
-  vDataSet.Close;
+  pDataSet.Close;
 end;
 
 destructor TDataBaseRtti<T>.Destroy;
@@ -374,268 +424,264 @@ end;
 function TDataBaseRtti<T>.DictionaryFields(var pDictionary: TDictionary<string, variant>): IDataBaseRtti<T>;
 var
   Ptr: Pointer;
-  aObj: TObject;
-  typRtti: TRttiType;
-  ctxRtti: TRttiContext;
-  prpRtti,
-  prpFKType: TRttiProperty;
-  vVariant: Variant;
-  mmStream: TMemoryStream;
+  LObj: TObject;
+  LTypRtti: TRttiType;
+  LCtxRtti: TRttiContext;
+  LPrpRtti,
+  LPrpFKType: TRttiProperty;
+  LVariant: Variant;
+  LMStream: TMemoryStream;
 begin
   Result  := Self;
-  ctxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    typRtti := ctxRtti.GetType(FInstance.classInfo);
-    for prpRtti in typRtti.GetProperties do
+    LTypRtti := LCtxRtti.GetType(FInstance.classInfo);
+    for LPrpRtti in LTypRtti.GetProperties do
     begin
-      if not prpRtti.IsNotNull and prpRtti.IsIgnore then
+      if not LPrpRtti.IsNotNull and LPrpRtti.IsIgnore then
         Continue;
 
-      case prpRtti.PropertyType.TypeKind of
+      case LPrpRtti.PropertyType.TypeKind of
         tkInteger, tkInt64:
         begin
-          if prpRtti.IsPrimaryKey or prpRtti.IsForeignKey then
+          if LPrpRtti.IsPrimaryKey or LPrpRtti.IsForeignKey then
           begin
-            if prpRtti.IsSequence and FModeInsert and 
-               (prpRtti.GetValue(Pointer(FInstance)).AsVariant <> null) then
+            if LPrpRtti.IsSequence and FModeInsert and
+               (LPrpRtti.GetValue(Pointer(FInstance)).AsVariant <> null) then
               continue
             else
-              pDictionary.Add(prpRtti.FieldName, prpRtti.GetValue(Pointer(FInstance)).AsInteger);
+              pDictionary.Add(LPrpRtti.FieldName, LPrpRtti.GetValue(Pointer(FInstance)).AsInteger);
           end
           else
-            pDictionary.Add(prpRtti.FieldName, prpRtti.GetValue(Pointer(FInstance)).AsInteger);
+            pDictionary.Add(LPrpRtti.FieldName, LPrpRtti.GetValue(Pointer(FInstance)).AsInteger);
           end;
         tkFloat:
         begin
-          if (prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDateTime)) or
-             (prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDate)) or
-             (prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TTime)) then
+          if (LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDateTime)) or
+             (LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDate)) or
+             (LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TTime)) then
           begin
-            if prpRtti.GetValue(Pointer(FInstance)).AsExtended = 0 then
-                pDictionary.Add(prpRtti.FieldName, Null)
+            if LPrpRtti.GetValue(Pointer(FInstance)).AsExtended = 0 then
+                pDictionary.Add(LPrpRtti.FieldName, Null)
             else
             begin
-              if prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDate) then
-                pDictionary.Add(prpRtti.FieldName, StrToDate(prpRtti.GetValue(Pointer(FInstance)).ToString))
-              else if prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TTime) then
-                pDictionary.Add(prpRtti.FieldName, StrToTime(prpRtti.GetValue(Pointer(FInstance)).ToString))
+              if LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDate) then
+                pDictionary.Add(LPrpRtti.FieldName, StrToDate(LPrpRtti.GetValue(Pointer(FInstance)).ToString))
+              else if LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TTime) then
+                pDictionary.Add(LPrpRtti.FieldName, StrToTime(LPrpRtti.GetValue(Pointer(FInstance)).ToString))
               else
-                pDictionary.Add(prpRtti.FieldName, StrToDateTime(prpRtti.GetValue(Pointer(FInstance)).ToString ));
+                pDictionary.Add(LPrpRtti.FieldName, StrToDateTime(LPrpRtti.GetValue(Pointer(FInstance)).ToString ));
             end;
           end
           else
-              pDictionary.Add(prpRtti.FieldName, _FloatFormat(prpRtti.GetValue(Pointer(FInstance)).ToString));
+              pDictionary.Add(LPrpRtti.FieldName, _FloatFormat(LPrpRtti.GetValue(Pointer(FInstance)).ToString));
         end;
-        tkWChar,
-        tkLString,
-        tkWString,
-        tkUString,
-        tkString:
-          pDictionary.Add(prpRtti.FieldName, prpRtti.GetValue(Pointer(FInstance)).AsString);
+        tkWChar, tkLString, tkWString, tkUString, tkString:
+          pDictionary.Add(LPrpRtti.FieldName, LPrpRtti.GetValue(Pointer(FInstance)).AsString);
         tkVariant:
-          pDictionary.Add(prpRtti.FieldName, prpRtti.GetValue(Pointer(FInstance)).AsVariant);
+          pDictionary.Add(LPrpRtti.FieldName, LPrpRtti.GetValue(Pointer(FInstance)).AsVariant);
         tkClass:
         begin
-          if prpRtti.IsForeignKey then
+          if LPrpRtti.IsForeignKey then
           begin
-            if prpRtti.GetValue(Pointer(FInstance)).AsInteger = 0 then
+            if LPrpRtti.GetValue(Pointer(FInstance)).AsInteger = 0 then
               Continue;
 
-            aObj := prpRtti.GetValue(Pointer(FInstance)).AsObject;
-            prpFKType := prpRtti.GetFKField(aObj);
+            LObj := LPrpRtti.GetValue(Pointer(FInstance)).AsObject;
+            LPrpFKType := LPrpRtti.GetFKField(LObj);
 
-            if (prpFKType <> nil) and (prpFKType.getValue(aObj).asInteger = 0) then
+            if (LPrpFKType <> nil) and (LPrpFKType.getValue(LObj).asInteger = 0) then
               Continue;
 
-            if (prpFKType <> nil) then
-              pDictionary.Add(prpRtti.fieldname, prpFKType.getValue(aObj).asinteger)
+            if (LPrpFKType <> nil) then
+              pDictionary.Add(LPrpRtti.fieldname, LPrpFKType.getValue(LObj).asinteger)
           end
           else
           begin
-            if prpRtti.PropertyType.Handle = TypeInfo(TJSONArray) then
-              pDictionary.Add(prpRtti.FieldName, TJsonArray(prpRtti.GetValue(Pointer(FInstance)).AsObject).ToJSON)
-            else if prpRtti.PropertyType.Handle = TypeInfo(TJSONObject) then
-              pDictionary.Add(prpRtti.FieldName, TJSONObject(prpRtti.GetValue(Pointer(FInstance)).AsObject).ToJSON)
-            else if prpRtti.PropertyType.Handle = TypeInfo(TMemoryStream) then
+            if LPrpRtti.PropertyType.Handle = TypeInfo(TJSONArray) then
+              pDictionary.Add(LPrpRtti.FieldName, TJsonArray(LPrpRtti.GetValue(Pointer(FInstance)).AsObject).ToJSON)
+            else if LPrpRtti.PropertyType.Handle = TypeInfo(TJSONObject) then
+              pDictionary.Add(LPrpRtti.FieldName, TJSONObject(LPrpRtti.GetValue(Pointer(FInstance)).AsObject).ToJSON)
+            else if LPrpRtti.PropertyType.Handle = TypeInfo(TMemoryStream) then
             begin
-              mmStream := TMemoryStream(prpRtti.GetValue(Pointer(FInstance)).AsObject);
-              mmStream.Position := 0;
-              vVariant := VarArrayCreate([0, mmStream.Size - 1], varByte);
-              Ptr := VarArrayLock(vVariant);
+              LMStream := TMemoryStream(LPrpRtti.GetValue(Pointer(FInstance)).AsObject);
+              LMStream.Position := 0;
+              LVariant := VarArrayCreate([0, LMStream.Size - 1], varByte);
+              Ptr := VarArrayLock(LVariant);
               try
-                mmStream.Read(Ptr^, mmStream.Size);
+                LMStream.Read(Ptr^, LMStream.Size);
               finally
-                VarArrayUnlock(vVariant);
+                VarArrayUnlock(LVariant);
               end;
 
-              pDictionary.Add(prpRtti.FieldName, vVariant);
+              pDictionary.Add(LPrpRtti.FieldName, LVariant);
             end;
           end;
         end;
         tkEnumeration:
-          if (prpRtti.GetValue(Pointer(FInstance)).TypeInfo.Name = 'Boolean') then
-            pDictionary.Add(prpRtti.fieldname, prpRtti.GetValue(Pointer(FInstance)).AsBoolean)
+        begin
+          if (LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo.Name = 'Boolean') then
+            pDictionary.Add(LPrpRtti.fieldname, LPrpRtti.GetValue(Pointer(FInstance)).AsBoolean)
+        end
       else
-          pDictionary.Add(prpRtti.FieldName, prpRtti.GetValue(Pointer(FInstance)).AsString);
+        pDictionary.Add(LPrpRtti.FieldName, LPrpRtti.GetValue(Pointer(FInstance)).AsString);
       end;
     end;
   finally
-    ctxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
-function TDataBaseRtti<T>.DictionaryTypeFields(const pParameters: TDictionary<string, TValue>; var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>;
+function TDataBaseRtti<T>.DictionaryTypeFields(const pParameters: TDictionary<string, TValue>; var pDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>;
 var
-  key: String;
+  LKey: String;
 begin
   Result := Self;
-  for Key in pParameters.Keys do
+  for LKey in pParameters.Keys do
   begin
-    case pParameters.Items[key].Kind of
+    case pParameters.Items[LKey].Kind of
       tkInteger, tkInt64:
-        aDictionary.Add(key, TFieldType.ftInteger);
+        pDictionary.Add(LKey, TFieldType.ftInteger);
       tkFloat:
       begin
-        if ((pParameters.Items[key].TypeInfo = TypeInfo(TDateTime)) or pParameters.Items[key].IsType<TDateTime>) then
-          aDictionary.Add(key, TFieldType.ftDateTime)
-        else if ((pParameters.Items[key].TypeInfo = TypeInfo(TDate)) or pParameters.Items[key].IsType<TDate>) then
-          aDictionary.Add(key, TFieldType.ftDate)
-        else if ((pParameters.Items[key].TypeInfo = TypeInfo(TTime)) or pParameters.Items[key].IsType<TTime>) then
-          aDictionary.Add(key, TFieldType.ftTime)
+        if ((pParameters.Items[LKey].TypeInfo = TypeInfo(TDateTime)) or pParameters.Items[LKey].IsType<TDateTime>) then
+          pDictionary.Add(LKey, TFieldType.ftDateTime)
+        else if ((pParameters.Items[LKey].TypeInfo = TypeInfo(TDate)) or pParameters.Items[LKey].IsType<TDate>) then
+          pDictionary.Add(LKey, TFieldType.ftDate)
+        else if ((pParameters.Items[LKey].TypeInfo = TypeInfo(TTime)) or pParameters.Items[LKey].IsType<TTime>) then
+          pDictionary.Add(LKey, TFieldType.ftTime)
         else
-          aDictionary.Add(key, TFieldType.ftFloat)
+          pDictionary.Add(LKey, TFieldType.ftFloat)
       end;
-      tkWChar,
-        tkLString,
-        tkWString,
-        tkUString:
-          aDictionary.Add(key, TFieldType.ftString);
-        tkEnumeration:
-          if (pParameters.Items[key].TypeInfo.Name = 'Boolean') then
-            aDictionary.Add(key, TFieldType.ftBoolean);
+      tkWChar, tkLString, tkWString, tkUString:
+        pDictionary.Add(LKey, TFieldType.ftString);
+      tkEnumeration:
+      begin
+        if (pParameters.Items[LKey].TypeInfo.Name = 'Boolean') then
+          pDictionary.Add(LKey, TFieldType.ftBoolean);
+      end;
     end;
   end;
 end;
 
-function TDataBaseRtti<T>.DictionaryTypeFields(var aDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>;
+function TDataBaseRtti<T>.DictionaryTypeFields(var pDictionary: TDictionary<string, TFieldType>): IDataBaseRtti<T>;
 var
-  ctxRtti   : TRttiContext;
-  typRtti   : TRttiType;
-  prpRtti   : TRttiProperty;
+  LCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LPrpRtti: TRttiProperty;
 begin
   Result := Self;
-  ctxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    typRtti := ctxRtti.GetType(FInstance.ClassInfo);
-    for prpRtti in typRtti.GetProperties do
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    for LPrpRtti in LTypRtti.GetProperties do
     begin
-      if not prpRtti.IsNotNull and prpRtti.IsIgnore then
+      if not LPrpRtti.IsNotNull and LPrpRtti.IsIgnore then
         Continue;
 
-      if ValueIsNil(prpRtti.GetValue(Pointer(FInstance))) then
+      if ValueIsNil(LPrpRtti.GetValue(Pointer(FInstance))) then
       Continue;
 
-      case prpRtti.PropertyType.TypeKind of
+      case LPrpRtti.PropertyType.TypeKind of
         tkInteger, tkInt64:
-          aDictionary.Add(prpRtti.FieldName, TFieldType.ftInteger);
+          pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftInteger);
         tkFloat:
         begin
-          if prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDateTime) then
-              aDictionary.Add(prpRtti.FieldName, TFieldType.ftDateTime)
-          else if prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDate) then
-              aDictionary.Add(prpRtti.FieldName, TFieldType.ftDate)
-          else if prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TTime) then
-              aDictionary.Add(prpRtti.FieldName, TFieldType.ftTime)
+          if LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDateTime) then
+              pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftDateTime)
+          else if LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TDate) then
+              pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftDate)
+          else if LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(TTime) then
+              pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftTime)
           else
-              aDictionary.Add(prpRtti.FieldName, TFieldType.ftFloat)
+              pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftFloat)
         end;
-        tkWChar,
-        tkLString,
-        tkWString,
-        tkUString:
-          aDictionary.Add(prpRtti.FieldName, TFieldType.ftString);
+        tkWChar, tkLString, tkWString, tkUString:
+          pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftString);
         tkEnumeration:
-          if (prpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(Boolean)) then
-            aDictionary.Add(prpRtti.FieldName, TFieldType.ftBoolean);
+        begin
+          if (LPrpRtti.GetValue(Pointer(FInstance)).TypeInfo = TypeInfo(Boolean)) then
+            pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftBoolean);
+        end;
         tkClass:
         begin
-          if (prpRtti.PropertyType.Handle = TypeInfo(TJSONArray)) or (prpRtti.PropertyType.Handle = TypeInfo(TJSONObject)) then
-            aDictionary.Add(prpRtti.FieldName, TFieldType.ftOraClob)
-          else if (prpRtti.PropertyType.Handle = TypeInfo(TMemoryStream)) then
-            aDictionary.Add(prpRtti.FieldName, TFieldType.ftBlob)
+          if (LPrpRtti.PropertyType.Handle = TypeInfo(TJSONArray)) or (LPrpRtti.PropertyType.Handle = TypeInfo(TJSONObject)) then
+            pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftOraClob)
+          else if (LPrpRtti.PropertyType.Handle = TypeInfo(TMemoryStream)) then
+            pDictionary.Add(LPrpRtti.FieldName, TFieldType.ftBlob)
         end;
       end;
     end;
   finally
-    ctxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
 function TDataBaseRtti<T>.Fields(var pFields: String): IDataBaseRtti<T>;
 var
-  vCtxRtti : TRttiContext;
-  vTypRtti : TRttiType;
-  vPrpRtti : TRttiProperty;
+  LCtxRtti : TRttiContext;
+  LTypRtti : TRttiType;
+  LPrpRtti : TRttiProperty;
 begin
   Result   := Self;
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
-    for vPrpRtti in vTypRtti.GetProperties do
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    for LPrpRtti in LTypRtti.GetProperties do
     begin
-      if not vPrpRtti.IsIgnore then
-        pFields := pFields + vPrpRtti.FieldName + ', ';
+      if not LPrpRtti.IsIgnore then
+        pFields := pFields + LPrpRtti.FieldName + ', ';
     end;
   finally
     pFields := Copy(pFields, 0, Length(pFields) - 2) + ' ';
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
-function TDataBaseRtti<T>.FieldsInsert(var aFields: String): IDataBaseRtti<T>;
+function TDataBaseRtti<T>.FieldsInsert(var pFields: String): IDataBaseRtti<T>;
 var
-  vObj      : TObject;
-  vCtxRtti  : TRttiContext;
-  vTypRtti  : TRttiType;
-  vPrpRtti,
-  vPrpFKType: TRttiProperty;
+  LObj: TObject;
+  LCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LPrpRtti,
+  LPrpFKType: TRttiProperty;
 begin
   Result   := Self;
 
   FModeInsert := True;
-  vCtxRtti    := TRttiContext.Create;
+  LCtxRtti    := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
-    for vPrpRtti in vTypRtti.GetProperties do
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    for LPrpRtti in LTypRtti.GetProperties do
     begin
 //      if vPrpRtti.IsAutoInc then
 //        Continue;
 
-      if vPrpRtti.IsIgnore then
+      if LPrpRtti.IsIgnore then
         Continue;
 
-      if vPrpRtti.IsForeignKey then
+      if LPrpRtti.IsForeignKey then
       begin
         begin
-          if vPrpRtti.GetValue(Pointer(FInstance)).IsObject then
+          if LPrpRtti.GetValue(Pointer(FInstance)).IsObject then
           begin
-            vObj := vPrpRtti.GetValue(Pointer(FInstance)).AsObject;
-            vPrpFKType := vPrpRtti.GetFKField(vObj);
-            if vPrpFKType.getValue(vObj).asinteger = 0 then
+            LObj := LPrpRtti.GetValue(Pointer(FInstance)).AsObject;
+            LPrpFKType := LPrpRtti.GetFKField(LObj);
+            if LPrpFKType.getValue(LObj).asinteger = 0 then
               Continue;
           end
           else
           begin
-            if vPrpRtti.GetValue(Pointer(FInstance)).AsInteger = 0 then
+            if LPrpRtti.GetValue(Pointer(FInstance)).AsInteger = 0 then
               Continue;
           end;
         end;
       end;
-      aFields := aFields + vPrpRtti.FieldName + ', ';
+      pFields := pFields + LPrpRtti.FieldName + ', ';
     end;
   finally
-    aFields := Copy(aFields, 0, Length(aFields) - 2) + ' ';
-    vCtxRtti.Free;
+    pFields := Copy(pFields, 0, Length(pFields) - 2) + ' ';
+    LCtxRtti.Free;
   end;
 end;
 
@@ -655,8 +701,8 @@ begin
     end;
     tkClass:
       Result := Pointer(pValue.AsObject) = nil
-    else
-      Result := True;
+  else
+    Result := True;
   end;
 end;
 
@@ -667,203 +713,231 @@ end;
 
 function TDataBaseRtti<T>.Param(var pParam: String): IDataBaseRtti<T>;
 var
-  vObj      : TObject;
-  vCtxRtti  : TRttiContext;
-  vTypRtti  : TRttiType;
-  vPrpRtti,
-  vPrpFKType: TRttiProperty;
+  LObj      : TObject;
+  LCtxRtti  : TRttiContext;
+  LTypRtti  : TRttiType;
+  LPrpRtti,
+  LPrpFKType: TRttiProperty;
 begin
   Result := Self;
 
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
-    for vPrpRtti in vTypRtti.GetProperties do
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    for LPrpRtti in LTypRtti.GetProperties do
     begin
-      if vPrpRtti.IsIgnore then
+      if LPrpRtti.IsIgnore then
         Continue;
 
 //      if vPrpRtti.IsAutoInc then
 //        Continue;
 
       if FModeInsert         and
-         vPrpRtti.IsSequence then
+         LPrpRtti.IsSequence then
       begin
-        if (vPrpRtti.GetValue(Pointer(FInstance)).AsVariant <> null) then
-          pParam := pParam + Format(':%s,', [vPrpRtti.FieldName])
+        if (LPrpRtti.GetValue(Pointer(FInstance)).AsVariant <> null) then
+          pParam := pParam + Format(':%s,', [LPrpRtti.FieldName])
         else
-          pParam := pParam + Format('nextval(%s), ', [QuotedStr(vPrpRtti.Sequence)]);
+          pParam := pParam + Format('nextval(%s), ', [QuotedStr(LPrpRtti.Sequence)]);
         Continue;
       end;
 
-      if vPrpRtti.IsEnum then
+      if LPrpRtti.IsEnum then
       begin
-        pParam := pParam + ':' + vPrpRtti.FieldName + '::' + vPrpRtti.EnumName + ', ';
+        pParam := pParam + ':' + LPrpRtti.FieldName + '::' + LPrpRtti.EnumName + ', ';
         Continue;
       end;
 
-      if vPrpRtti.IsForeignKey then
+      if LPrpRtti.IsForeignKey then
       begin
         begin
-          if vPrpRtti.GetValue(Pointer(FInstance)).isobject then
+          if LPrpRtti.GetValue(Pointer(FInstance)).isobject then
           begin
-            vObj := vPrpRtti.GetValue(Pointer(FInstance)).AsObject;
-            vPrpFKType := vPrpRtti.GetFKField(vObj);
-            if vPrpFKType.getValue(vObj).asinteger = 0 then
+            LObj := LPrpRtti.GetValue(Pointer(FInstance)).AsObject;
+            LPrpFKType := LPrpRtti.GetFKField(LObj);
+            if LPrpFKType.getValue(LObj).asinteger = 0 then
                 Continue;
           end
           else
           begin
-            if vPrpRtti.GetValue(Pointer(FInstance)).AsInteger = 0 then
+            if LPrpRtti.GetValue(Pointer(FInstance)).AsInteger = 0 then
               Continue;
           end;
         end;
       end;
-      pParam  := pParam + ':' + vPrpRtti.FieldName + ', ';
+      pParam  := pParam + ':' + LPrpRtti.FieldName + ', ';
     end;
   finally
     pParam := Copy(pParam, 0, Length(pParam) - 2) + ' ';
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
 function TDataBaseRtti<T>.Sequence(var pSequence: String): IDataBaseRtti<T>;
 var
-  vTypRtti: TRttiType;
-  vCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LCtxRtti: TRttiContext;
 begin
   Result := Self;
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
-    if vTypRtti.Has<Seq> then
-      pSequence := vTypRtti.GetAttribute<Seq>.Name;
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    if LTypRtti.Has<Seq> then
+      pSequence := LTypRtti.GetAttribute<Seq>.Name;
   finally
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
 function TDataBaseRtti<T>.TableName(var pTableName: String): IDataBaseRtti<T>;
 var
-  vTypRtti: TRttiType;
-  vCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LCtxRtti: TRttiContext;
 begin
   Result   := Self;
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
-    if vTypRtti.Has<Table> then
-      pTableName := vTypRtti.GetAttribute<Table>.Name;
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    if LTypRtti.Has<Table> then
+      pTableName := LTypRtti.GetAttribute<Table>.Name;
   finally
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
 function TDataBaseRtti<T>.Update(var pUpdate: String): IDataBaseRtti<T>;
 var
-  vValue : TValue;
-  vTypRtti : TRttiType;
-  vCtxRtti : TRttiContext;
-  vPrpRtti : TRttiProperty;
+  LValue : TValue;
+  LTypRtti : TRttiType;
+  LCtxRtti : TRttiContext;
+  LPrpRtti : TRttiProperty;
 begin
   Result   := Self;
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
 
-    for vPrpRtti in vTypRtti.GetProperties do
+    for LPrpRtti in LTypRtti.GetProperties do
     begin
-      vValue := vPrpRtti.GetValue(Pointer(FInstance));
+      LValue := LPrpRtti.GetValue(Pointer(FInstance));
 
-      if vPrpRtti.IsIgnore then
+      if LPrpRtti.IsIgnore then
         Continue;
 
-      if vPrpRtti.IsAutoInc then
+      if LPrpRtti.IsAutoInc then
         Continue;
 
-      if (not ValueIsNil(vValue)) then
+      if (not ValueIsNil(LValue)) then
       begin
-        if vPrpRtti.IsEnum then
+        if LPrpRtti.IsEnum then
         begin
-          pUpdate := pUpdate + vPrpRtti.FieldName + ' = :' + vPrpRtti.FieldName + '::' + vPrpRtti.EnumName + ', ';
+          pUpdate := pUpdate + LPrpRtti.FieldName + ' = :' + LPrpRtti.FieldName + '::' + LPrpRtti.EnumName + ', ';
           Continue;
         end;
-        pUpdate := pUpdate + vPrpRtti.FieldName + ' = :' + vPrpRtti.FieldName + ', ';
+        pUpdate := pUpdate + LPrpRtti.FieldName + ' = :' + LPrpRtti.FieldName + ', ';
       end;
     end;
   finally
     pUpdate := Copy(pUpdate, 0, Length(pUpdate) - 2) + ' ';
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
 function TDataBaseRtti<T>.Values(pInstance: T; var pValues: String): IDataBaseRtti<T>;
 var
-  vCtxRtti: TRttiContext;
-  vTypRtti: TRttiType;
-  vPrpRtti: TRttiProperty;
+  LCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LPrpRtti: TRttiProperty;
 begin
   Result   := Self;
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
-    for vPrpRtti in vTypRtti.GetProperties do
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    for LPrpRtti in LTypRtti.GetProperties do
     begin
-      if vPrpRtti.IsIgnore then
+      if LPrpRtti.IsIgnore then
         Continue;
 
 //      if vPrpRtti.IsAutoInc then
 //        Continue;
-      if vPrpRtti.IsSequence then
+      if LPrpRtti.IsSequence then
       begin
-        pValues := pValues + Format('nextval(%s), ', [QuotedStr(vPrpRtti.Sequence)]);
+        pValues := pValues + Format('nextval(%s), ', [QuotedStr(LPrpRtti.Sequence)]);
         Continue;
       end;
 
-      pValues  := pValues + vPrpRtti.FieldName + '=' + vPrpRtti.GetValue(Pointer(pInstance)).AsString + ', ';
+      pValues  := pValues + LPrpRtti.FieldName + '=' + LPrpRtti.GetValue(Pointer(pInstance)).AsString + ', ';
     end;
   finally
     pValues := Copy(pValues, 0, Length(pValues) - 2) + ' ';
-    vCtxRtti.Free;
+    LCtxRtti.Free;
   end;
 end;
 
 function TDataBaseRtti<T>.Where(var pWhere: String): IDataBaseRtti<T>;
 var
-  vTypRtti: TRttiType;
-  vCtxRtti: TRttiContext;
-  vPrpRtti: TRttiProperty;
-  vValue: TValue;
+  LValue: TValue;
+  LTypRtti: TRttiType;
+  LCtxRtti: TRttiContext;
+  LPrpRtti: TRttiProperty;
 begin
   Result   := Self;
-  vCtxRtti := TRttiContext.Create;
+  LCtxRtti := TRttiContext.Create;
   try
-    vTypRtti := vCtxRtti.GetType(FInstance.ClassInfo);
-    for vPrpRtti in vTypRtti.GetProperties do
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    for LPrpRtti in LTypRtti.GetProperties do
     begin
-      vValue := vPrpRtti.GetValue(Pointer(FInstance));
-      if vPrpRtti.IsPrimaryKey then
+      LValue := LPrpRtti.GetValue(Pointer(FInstance));
+      if LPrpRtti.IsPrimaryKey then
       begin
-        if (vPrpRtti.IsEnum) then
-          pWhere := pWhere + vPrpRtti.FieldName + ' = :' + vPrpRtti.FieldName + '::' + vPrpRtti.EnumName + ' AND '
+        if (LPrpRtti.IsEnum) then
+          pWhere := pWhere + LPrpRtti.FieldName + ' = :' + LPrpRtti.FieldName + '::' + LPrpRtti.EnumName + ' AND '
         else
-          if (not ValueIsNil(vValue)) then
-            pWhere := pWhere + vPrpRtti.FieldName + ' = :' + vPrpRtti.FieldName + ' AND ';
+          if (not ValueIsNil(LValue)) then
+            pWhere := pWhere + LPrpRtti.FieldName + ' = :' + LPrpRtti.FieldName + ' AND ';
       end
       else
       begin
-        if (not ValueIsNil(vValue)) then
+        if (not ValueIsNil(LValue)) then
         begin
-          if (vPrpRtti.IsEnum) then
-            pWhere := pWhere + vPrpRtti.FieldName + ' = :' + vPrpRtti.FieldName + '::' + vPrpRtti.EnumName + ' AND '
+          if (LPrpRtti.IsEnum) then
+            pWhere := pWhere + LPrpRtti.FieldName + ' = :' + LPrpRtti.FieldName + '::' + LPrpRtti.EnumName + ' AND '
           else
-            pWhere := pWhere + vPrpRtti.FieldName + ' = :' + vPrpRtti.FieldName + ' AND ';
+            pWhere := pWhere + LPrpRtti.FieldName + ' = :' + LPrpRtti.FieldName + ' AND ';
         end;
       end;
     end;
   finally
     pWhere := Copy(pWhere, 0, Length(pWhere) - 4) + ' ';
-    vCtxRtti.Free;
+    LCtxRtti.Free;
+  end;
+end;
+
+procedure TDataBaseRtti<T>._ApplyValueToChildEntity(FieldName: string; pObjChild: TObject; pField: TField);
+var
+  LTypRtti: TRttiType;
+  LPrpRtti: TRttiProperty;
+  LCtxRtti: TRttiContext;
+begin
+  LCtxRtti := TRttiContext.Create;
+  try
+    LTypRtti := LCtxRtti.GetType(pObjChild.Classtype);
+    for LPrpRtti in LTypRtti.GetProperties do
+    begin
+      if LPrpRtti.IsPrimaryKey then
+      begin
+        case LPrpRtti.PropertyType.TypeKind of
+         tkUnknown, tkString, tkWChar, tkLString, tkWString, tkUString:
+          LPrpRtti.SetValue(Pointer(pObjChild), pField.AsString);
+         tkInteger, tkInt64:
+           LPrpRtti.SetValue(Pointer(pObjChild), pField.AsInteger);
+         tkFloat:
+          LPrpRtti.SetValue(Pointer(pObjChild), pField.AsFloat);
+        end;
+      end;
+    end;
+  finally
+    LCtxRtti.Free;
   end;
 end;
 
@@ -976,23 +1050,49 @@ begin
 //    Result := TValue.FromVariant((pComponent as TDateEdit).DateTime);
 end;
 
+function TDataBaseRtti<T>.GetParameterFromPK: TDictionary<string, TValue>;
+var
+  LValue: TValue;
+  LCtxRtti: TRttiContext;
+  LTypRtti: TRttiType;
+  LPrpRtti: TRttiProperty;
+  LRttiInstance: TRttiInstanceType;
+begin
+  Result := TDictionary<string, TValue>.Create;
+
+  LCtxRtti := TRttiContext.Create;
+  try
+    LTypRtti := LCtxRtti.GetType(FInstance.ClassInfo);
+    for LPrpRtti in LTypRtti.GetProperties do
+    begin
+      if LPrpRtti.IsPrimaryKey then
+      begin
+        Result.AddOrSetValue(LPrpRtti.FieldName, LPrpRtti.GetValue(TObject(FInstance)));
+        Exit(Result);
+      end;
+    end;
+  finally
+    LCtxRtti.Free;
+  end;
+end;
+
 function TDataBaseRtti<T>.GetRttiProperty(pEntity: T; pPropertyName: String): TRttiProperty;
 var
-  vTypRttiEntity: TRttiType;
-  vCtxRttiEntity: TRttiContext;
+  LTypRttiEntity: TRttiType;
+  LCtxRttiEntity: TRttiContext;
 begin
-  vCtxRttiEntity := TRttiContext.Create;
+  LCtxRttiEntity := TRttiContext.Create;
   try
-    vTypRttiEntity := vCtxRttiEntity.GetType(pEntity.ClassInfo);
-    Result := vTypRttiEntity.GetProperty(pPropertyName);
+    LTypRttiEntity := LCtxRttiEntity.GetType(pEntity.ClassInfo);
+    Result := LTypRttiEntity.GetProperty(pPropertyName);
 
     if not Assigned(Result) then
-      Result := vTypRttiEntity.GetPropertyFromAttribute<DBField>(pPropertyName);
+      Result := LTypRttiEntity.GetPropertyFromAttribute<DBField>(pPropertyName);
 
     if not Assigned(Result) then
       raise EDataBaseRtti.Create('Property ' + pPropertyName + ' not found!');
   finally
-    vCtxRttiEntity.Free;
+    LCtxRttiEntity.Free;
   end;
 end;
 
@@ -1025,15 +1125,15 @@ begin
                 LValue := LRttiInstance.MetaclassType.Create;
               end
               else
-              begin
-                Result.AddOrSetValue(LprpRtti.FieldName, LValue.AsObject);
-                Exit(Result);
-              end;
+                Result.AddOrSetValue(LprpRtti.FieldName, LValue.AsObject)
             end;
           end;
         end;
       end;
     end;
+
+    if (Result.Count = 0) then
+      FreeAndNil(Result);
   finally
     LCtxRtti.Free;
   end;
