@@ -1,4 +1,10 @@
-DROP TABLE estado;
+DROP TABLE IF EXISTS estado;
+DROP SEQUENCE IF EXISTS estado_seq;
+
+CREATE SEQUENCE estado_seq
+    start 1 
+    increment 1 
+    NO MAXVALUE CACHE 1;
 
 CREATE TABLE estado(
     id          integer         NOT NULL,

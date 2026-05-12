@@ -37,7 +37,9 @@ uses
   Core.Services.Interfaces in '..\Fontes\Core\Services\Core.Services.Interfaces.pas',
   Controller.Raca in '..\Fontes\Controllers\Controller.Raca.pas',
   Services.Raca in '..\Fontes\Services\Services.Raca.pas',
-  Entidade.Raca in '..\Fontes\Entidades\Entidade.Raca.pas';
+  Entidade.Raca in '..\Fontes\Entidades\Entidade.Raca.pas',
+  Entidade.Pais in '..\Fontes\Entidades\Entidade.Pais.pas',
+  Entidade.Estado in '..\Fontes\Entidades\Entidade.Estado.pas';
 
 {$R *.res}
 
