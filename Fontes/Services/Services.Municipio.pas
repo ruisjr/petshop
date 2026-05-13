@@ -1,4 +1,4 @@
-unit Services.Especie;
+unit Services.Municipio;
 
 interface
 
@@ -10,7 +10,7 @@ uses
   ,Core.Services.Interfaces;
 
 type
-  TServiceEspecie = class(TInterfacedPersistent, IService)
+  TServiceMunicipio = class(TInterfacedPersistent, IService)
   strict private
   public
     function GetService(const id: Integer): String;
@@ -27,7 +27,7 @@ uses
   ,System.SysUtils
   ,System.Generics.Collections
   {Classes de Negócio}
-  ,Entidade.Especie
+  ,Entidade.Municipio
   ,Core.Environment
   ,Core.DataBase.Types
   ,Core.Rest.JsonHelper
@@ -36,17 +36,18 @@ uses
 
 { TServicePessoa }
 
-function TServiceEspecie.GetServices: String;
+function TServiceMunicipio.GetServices: String;
 var
-  LEspecieList: TObjectList<TEspecie>;
-  LDAO: IDataBaseDAO<TEspecie>;
+  LEspecieList: TObjectList<TMunicipio>;
+  LDAO: IDataBaseDAO<TMunicipio>;
 begin
-  LDAO := TDataBaseDAO<TEspecie>.Create;
+  inherited;
+  LDAO := TDataBaseDAO<TMunicipio>.Create;
   try
     try
       LEspecieList := LDAO.ToList(50, 1);
       try
-        Result := TJson.ObjectListToString<TEspecie>(LEspecieList);
+        Result := TJson.ObjectListToString<TMunicipio>(LEspecieList);
       finally
         LEspecieList.Clear;
         FreeAndNil(LEspecieList);
@@ -55,7 +56,7 @@ begin
       on E: Exception do
       begin
         Env.Log.Error(E.Message);
-        raise Exception.Create('Error: Não foi possível recuperar especie na base de dados.');
+        raise Exception.Create('Error: Não foi possível recuperar municípios na base de dados.');
       end;
     end;
   finally
@@ -63,12 +64,13 @@ begin
   end;
 end;
 
-function TServiceEspecie.GetService(const id: Integer): String;
+function TServiceMunicipio.GetService(const id: Integer): String;
 var
-  LEspecie: TEspecie;
-  LDAO: IDataBaseDAO<TEspecie>;
+  LDAO: IDataBaseDAO<TMunicipio>;
+  LEspecie: TMunicipio;
 begin
-  LDAO := TDataBaseDAO<TEspecie>.Create;
+  inherited;
+  LDAO := TDataBaseDAO<TMunicipio>.Create;
   try
     try
       LEspecie := LDAO.Where('id', OtEqual, id).First;
@@ -81,7 +83,7 @@ begin
       on E: Exception do
       begin
         Env.Log.Error(E.Message);
-        raise Exception.Create('Error: Não foi possível recuperar a especie na base de dados.');
+        raise Exception.Create('Error: Não foi possível recuperar a município na base de dados.');
       end;
     end;
   finally
@@ -89,7 +91,7 @@ begin
   end;
 end;
 
-function TServiceEspecie.PostService(const ABody: TJSONObject): String;
+function TServiceMunicipio.PostService(const ABody: TJSONObject): String;
 begin
   inherited;
 end;

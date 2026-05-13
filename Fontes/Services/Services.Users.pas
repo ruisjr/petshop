@@ -37,27 +37,26 @@ uses
 
 function TServiceUsuario.GetService(const id: Integer): String;
 var
-  LUsuarioList: TObjectList<TUsuario>;
+  LUsuario: TUsuario;
   LDAO: IDataBaseDAO<TUsuario>;
 begin
   LDAO := TDataBaseDAO<TUsuario>.Create;
   try
     try
-      LUsuarioList := LDAO
-                        .Fields('id, nome, login, data_cadastro, data_ultimo_acesso, email, bloqueado, ativo, primeiro_acesso')
-                        .Where('id', OtEqual, id)
-                      .ToList(50, 1);
+      LUsuario := LDAO
+                    .Fields('id, nome, login, data_cadastro, data_ultimo_acesso, email, bloqueado, ativo, primeiro_acesso')
+                    .Where('id', OtEqual, id)
+                  .First;
       try
-        Result := TJson.ObjectListToString<TUsuario>(LUsuarioList);
+        Result := TJson.ObjectToJsonString(LUsuario);
       finally
-        LUsuarioList.Clear;
-        FreeAndNil(LUsuarioList);
+        FreeAndNil(LUsuario);
       end;
     except
       on E: Exception do
       begin
         Env.Log.Error(E.Message);
-        raise Exception.Create('Error: Não foi possível recuperar usuários da base de dados.');
+        raise Exception.Create('Error: Não foi possível recuperar usuário da base de dados.');
       end;
     end;
   finally
@@ -67,8 +66,8 @@ end;
 
 function TServiceUsuario.GetServices(): String;
 var
-  LUsuarioList: TObjectList<TUsuario>;
   LDAO: IDataBaseDAO<TUsuario>;
+  LUsuarioList: TObjectList<TUsuario>;
 begin
   LDAO := TDataBaseDAO<TUsuario>.Create;
   try

@@ -69,48 +69,50 @@ end;
 
 destructor TBaseModel.Destroy;
 var
-  vCtx: TRttiContext;
-  vType: TRttiType;
-  vProp: TRttiProperty;
-  vPropValue: TValue;
+  LCtx: TRttiContext;
+  LType: TRttiType;
+  LprpRtti: TRttiProperty;
+  LPropValue: TValue;
 begin
-  vCtx := TRttiContext.Create;
+  LCtx := TRttiContext.Create;
   try
-    vType := vCtx.GetType(Self.ClassType);
-    for vProp in vType.GetProperties do
+    LType := LCtx.GetType(Self.ClassType);
+    for LprpRtti in LType.GetProperties do
     begin
-      if vProp.PropertyType.TypeKind = tkClass then
+      if LprpRtti.PropertyType.TypeKind = tkClass then
       begin
-        if vProp <> nil then
+        if LprpRtti.PropertyType.IsInstance then
         begin
-          vPropValue := vProp.GetValue(Self);
-          if (not vPropValue.IsEmpty) then
-            vPropValue.AsObject.Free;
-        end
+          LPropValue := LprpRtti.GetValue(Self);
+          if (LPropValue.AsObject <> nil) then
+          begin
+            LPropValue.AsObject.Free;
+          end
+        end;
       end;
     end;
   finally
-    vCtx.Free;
+    LCtx.Free;
   end;
 end;
 
 function TBaseModel.ToStrings: String;
 var
-  vCtx: TRttiContext;
-  vType: TRttiType;
-  vProp: TRttiProperty;
-  vText: String;
+  LCtx: TRttiContext;
+  LType: TRttiType;
+  LProp: TRttiProperty;
+  LText: String;
 begin
-  vText := 'Class: ' + Self.ClassName + #13#10;
-  vCtx := TRttiContext.Create;
+  LText := 'Class: ' + Self.ClassName + #13#10;
+  LCtx := TRttiContext.Create;
   try
-    vType := vCtx.GetType(Self.ClassType);
-    for vProp in vType.GetProperties do
-      vText := vText + 'Property: ' + vProp.Name + #13#10;
+    LType := LCtx.GetType(Self.ClassType);
+    for LProp in LType.GetProperties do
+      LText := LText + 'Property: ' + LProp.Name + #13#10;
   finally
-    vCtx.Free;
+    LCtx.Free;
   end;
-  Result := vText;
+  Result := LText;
 end;
 
 end.

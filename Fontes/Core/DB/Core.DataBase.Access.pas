@@ -31,6 +31,7 @@ type
     FWhere: String;
     FFields: String;
     FList: TObjectList<T>;
+    FDictChild: TDictionary<String, TObject>;
     FParameters: TDictionary<String, TValue>;
     FDataSource: TDataSource;
 
@@ -79,7 +80,8 @@ type
 implementation
 
 uses
-   Core.DataBase.Rtti
+   Core.Functions
+  ,Core.DataBase.Rtti
   ,Core.DataBase.SQLMaker;
 
 
@@ -183,41 +185,45 @@ var
   LKey,
   LSQL: String;
   LObj: TObject;
-  LDict: TDictionary<String, TObject>;
+  LParameter: TDictionary<String, TValue>;
 begin
-  LDict := TDataBaseRtti<T>.New(FEntity).LoadObjectForeignKey(pEntity);
+  FDictChild := TDataBaseRtti<T>.New(FEntity).LoadObjectForeignKey(pEntity);
 
-  if not Assigned(LDict) then
+  if not Assigned(FDictChild) then
     Exit;
 
-  for LKey in LDict.Keys do
+  for LKey in FDictChild.Keys do
   begin
-    LObj := TObject(LDict[LKey]);
-    FParameters := Self.GetParameterChild(LObj);
-
-    FQuery.DataSet.DisableControls;
+    LObj := TObject(FDictChild[LKey]);
+    LParameter := Self.GetParameterChild(LObj);
     try
-      TSQLMaker<T>.New(LObj)
-        .Fields(FFields)
-        .Where(FParameters)
-        .GroupBy(FGroup)
-        .OrderBy(FOrder)
-        .Limit('1')
-      .Select(LSQL);
+      FQuery.DataSet.DisableControls;
+      try
+        TSQLMaker<T>.New(LObj)
+          .Fields(FFields)
+          .Where(LParameter)
+          .GroupBy(FGroup)
+          .OrderBy(FOrder)
+          .Limit('1')
+        .Select(LSQL);
 
-      FQuery.SQL.Clear;
-      FQuery.SQL.Add(LSQL);
-      FQuery.FillParameter(FParameters);
-      FQuery.Open;
+        FQuery.SQL.Clear;
+        FQuery.SQL.Add(LSQL);
+        FQuery.FillParameter(LParameter);
+        FQuery.Open;
 
-      TDataBaseRtti<T>.New(LObj).DataSetToEntity(FQuery.DataSet, LObj);
+        TDataBaseRtti<T>.New(LObj).DataSetToEntity(FQuery.DataSet, LObj);
 
-      TDataBaseRtti<T>.New(LObj).ApplyEntityChildToParent(pEntity, LObj, LKey);
+        TDataBaseRtti<T>.New(LObj).ApplyEntityChildToParent(pEntity, LObj, LKey);
+      finally
+        Self.Clear;
+
+        FQuery.DataSet.EnableControls;
+        FQuery.DataSet.Close;
+      end;
     finally
-      Self.Clear;
-
-      FQuery.DataSet.EnableControls;
-      FQuery.DataSet.Close;
+      TDictUtils.FreeObjects<string, TValue>(LParameter);
+      FreeAndNil(LParameter);
     end;
   end;
 end;
@@ -315,6 +321,13 @@ begin
     FreeAndNil(FDataSource);
   if Assigned(FEntity) then
     FreeAndNil(FEntity);
+  if Assigned(FParameters) then
+  begin
+    TDictUtils.FreeObjects<string, TValue>(FParameters);
+    FreeAndNil(FParameters);
+  end;
+
+  TDictUtils.FreeObjects<String, TObject>(FDictChild);
 end;
 
 function TDataBaseDAO<T>.Bind(const pForm: TForm): IDataBaseDAO<T>;
@@ -355,16 +368,16 @@ end;
 
 procedure TDataBaseDAO<T>.Insert(pEntity: T);
 var
-  vSQL: String;
+  LSQL: String;
 begin
   try
     {Atribuir ao pEntity o id obtido}
     TDataBaseRtti<T>.New(Self).BindValueToProperty(pEntity, 'Id', Self.GetNewID);
 
-    TSQLMaker<T>.New(pEntity).Insert(vSQL);
+    TSQLMaker<T>.New(pEntity).Insert(LSQL);
 
     FQuery.SQL.Clear;
-    FQuery.SQL.Add(vSQL);
+    FQuery.SQL.Add(LSQL);
     FQuery.FillParameter(pEntity, True);
     FQuery.ExecSQL;
   except
@@ -378,7 +391,8 @@ end;
 
 function TDataBaseDAO<T>.ToList(const pRecMax: Integer; const pRecSkip: Integer): TObjectList<T>;
 var
-  vSQL: String;
+  LSQL: String;
+  LObj: T;
 begin
   TSQLMaker<T>.New(FEntity)
     .Fields(FFields)
@@ -386,12 +400,12 @@ begin
     .GroupBy(FGroup)
     .OrderBy(FOrder)
     .Limit(FLimit)
-  .Select(vSQL);
+  .Select(LSQL);
 
   FQuery.DataSet.DisableControls;
   try
     FQuery.SQL.Clear;
-    FQuery.SQL.Add(vSQL);
+    FQuery.SQL.Add(LSQL);
     FQuery.FillParameter(FParameters);
 
     if (pRecMax > 0) then
@@ -404,7 +418,12 @@ begin
     Result := TObjectList<T>.Create;
 
     TDataBaseRtti<T>.New(Self).DataSetToEntityList(FQuery.DataSet, Result);
+
+    for LObj in Result do
+      Self.LoadChildObjects(LObj);
   finally
+    Self.Clear;
+
     FQuery.DataSet.EnableControls;
     FQuery.DataSet.Close;
   end;

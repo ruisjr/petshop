@@ -1,6 +1,7 @@
 program AppPetShop;
 
 uses
+  FastMM5,
   Vcl.Forms,
   AppSrvPetShop in 'AppSrvPetShop.pas' {FrmPrincipal},
   Core.Api in '..\Fontes\Core\Core.Api.pas',
@@ -38,12 +39,22 @@ uses
   Controller.Raca in '..\Fontes\Controllers\Controller.Raca.pas',
   Services.Raca in '..\Fontes\Services\Services.Raca.pas',
   Entidade.Raca in '..\Fontes\Entidades\Entidade.Raca.pas',
-  Entidade.Pais in '..\Fontes\Entidades\Entidade.Pais.pas',
-  Entidade.Estado in '..\Fontes\Entidades\Entidade.Estado.pas';
+  Controller.Municipio in '..\Fontes\Controllers\Controller.Municipio.pas',
+  Services.Municipio in '..\Fontes\Services\Services.Municipio.pas',
+  Entidade.Estado in '..\Fontes\Entidades\Entidade.Estado.pas',
+  Entidade.Municipio in '..\Fontes\Entidades\Entidade.Municipio.pas',
+  Entidade.Pais in '..\Fontes\Entidades\Entidade.Pais.pas';
 
 {$R *.res}
 
 begin
+
+   ReportMemoryLeaksOnShutdown := True;
+   FastMM_EnterDebugMode;
+   FastMM_MessageBoxEvents := [];
+   FastMM_LogToFileEvents := FastMM_LogToFileEvents + [mmetUnexpectedMemoryLeakDetail, mmetUnexpectedMemoryLeakSummary];
+
+
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFrmPrincipal, FrmPrincipal);

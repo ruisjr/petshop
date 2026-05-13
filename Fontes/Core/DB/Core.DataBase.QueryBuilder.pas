@@ -66,8 +66,8 @@ begin
 
   FQuery := TFDQuery.Create(nil);
   FQuery.Connection := Env.Connection.GetConnection;
-
   Fquery.UpdateOptions.ReadOnly := True;
+
   FQuery.FetchOptions.Mode := fmAll;
   FQuery.FetchOptions.RowsetSize := 25;
   FQuery.FetchOptions.Unidirectional := True;
@@ -120,7 +120,6 @@ begin
     FFields := FQuery.Fields;
   end;
   Result := FFields;
-
 end;
 
 procedure TQueryBuilder<T>.FillParameter(pInstance: T; pInsert: Boolean);

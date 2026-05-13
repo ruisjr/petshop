@@ -1,4 +1,4 @@
-unit Controller.Raca;
+unit Controller.Municipio;
 
 interface
 
@@ -19,18 +19,18 @@ implementation
 
 uses
   {Classes de Negócio}
-  Services.Raca;
+  Services.Municipio;
 
 { TControllerEspecie }
 
 
 procedure Registry;
 begin
-  LController := TControllerBase.Create(TServiceRaca.Create);
+  LController := TControllerBase.Create(TServiceMunicipio.Create);
 
   {Métodos Get}
-  THorse.Get('/pet/raca',  TControllerBase(LController).DoGet);
-  THorse.Get('/pet/racas', TControllerBase(LController).DoGets);
+  THorse.Get('/base/municipio',  TControllerBase(LController).DoGet);
+  THorse.Get('/base/municipios', TControllerBase(LController).DoGets);
 end;
 
 procedure UnRegistry;

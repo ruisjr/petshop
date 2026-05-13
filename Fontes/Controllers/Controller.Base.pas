@@ -30,19 +30,23 @@ type
   public
     {Construtores e Destrutores}
     constructor Create(AService: IService); reintroduce;
+    destructor Destroy; override;
 
   published
-    procedure DoPost(Req: THorseRequest; Res: THorseResponse);
-    procedure DoGet(Req: THorseRequest; Res: THorseResponse);
-    procedure DoGets(Req: THorseRequest; Res: THorseResponse);
+    procedure DoPost(Req: THorseRequest; Res: THorseResponse); virtual;
+    procedure DoGet(Req: THorseRequest; Res: THorseResponse); virtual;
+    procedure DoGets(Req: THorseRequest; Res: THorseResponse); virtual;
+
+    procedure FreeMemory;
   end;
 
 implementation
 
 uses
   {Classe de Negócio}
-   Core.Functions
-  ,Core.Environment;
+   Rest.Json
+  ,Core.Environment
+  ,Core.Rest.JsonHelper;
 
 { TServiceBase }
 
@@ -61,12 +65,21 @@ begin
   Res.Send(LResponse);
 end;
 
+procedure TControllerBase.FreeMemory;
+begin
+  TObject(FService).Free;
+  FService := nil;
+
+  inherited;
+  Self.Destroy;
+end;
+
 procedure TControllerBase.DoGetError(pMsg, pDetailedMessage: String; Res: THorseResponse);
 var
   LResponse: String;
 begin
   LResponse := Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest);
-  Env.Log.Debug(Self.MethodName(@TControllerBase.DoGetError) + ' | Response: ' +LResponse);
+  Env.Log.Error(Self.MethodName(@TControllerBase.DoGetError) + ' | Response: ' +LResponse);
   Res.Send(Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest)).Status(Integer(THTTPStatus.BadRequest));
 end;
 
@@ -80,11 +93,17 @@ begin
       Self.DoSend(FService.GetServices(), Res);
     finally
       LBody.ClearAndFreeItems;
+      FreeAndNil(LBody);
     end;
   except
     on E: Exception do
       Self.DoGetError('Ocorreu erro ao processar a solicitação', E.Message, Res);
   end;
+end;
+
+destructor TControllerBase.Destroy;
+begin
+  inherited;
 end;
 
 procedure TControllerBase.DoGet(Req: THorseRequest; Res: THorseResponse);
@@ -98,6 +117,7 @@ begin
       Self.DoSend(FService.GetService(LBody.GetValue<Integer>('id')), Res);
     finally
       LBody.ClearAndFreeItems;
+      FreeAndNil(LBody);
     end;
   except
     on E: Exception do
@@ -110,7 +130,7 @@ var
   LResponse: String;
 begin
   LResponse := Self.GetJsonDefaultError(pMsg, pDetailedMessage, THTTPStatus.BadRequest);
-  Env.Log.Debug(Self.MethodName(@TControllerBase.DoPostError) + ' | Response: ' +LResponse);
+  Env.Log.Error(Self.MethodName(@TControllerBase.DoPostError) + ' | Response: ' +LResponse);
   Res.Send(LResponse).Status(Integer(THTTPStatus.BadRequest));
 end;
 
@@ -128,6 +148,7 @@ begin
     end;
   finally
     LJsonObj.ClearAndFreeItems;
+    FreeAndNil(LJsonObj);
   end;
 end;
 
@@ -147,6 +168,7 @@ begin
     Result := LJsonObj.ToJSON;
   finally
     LJsonObj.ClearAndFreeItems;
+    FreeAndNil(LJsonObj);
   end;
 end;
 
@@ -163,6 +185,7 @@ begin
     Result := LJsonObj.ToJSON;
   finally
     LJsonObj.ClearAndFreeItems;
+    FreeAndNil(LJsonObj);
   end;
 end;
 

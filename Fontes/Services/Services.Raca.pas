@@ -46,7 +46,7 @@ begin
     try
       LRaca := LDAO.Where('id', OtEqual, id).First;
       try
-        Result := TJson.ObjectToJsonObject(LRaca).ToJSON;
+        Result := TJson.ObjectToJsonString(LRaca);
       finally
         FreeAndNil(LRaca);
       end;
@@ -63,8 +63,30 @@ begin
 end;
 
 function TServiceRaca.GetServices: String;
+var
+  LRacaList: TObjectList<TRaca>;
+  LDAO: IDataBaseDAO<TRaca>;
 begin
-
+  LDAO := TDataBaseDAO<TRaca>.Create;
+  try
+    try
+      LRacaList := LDAO.ToList(50, 1);
+      try
+        Result := TJson.ObjectListToString<TRaca>(LRacaList);
+      finally
+        LRacaList.Clear;
+        FreeAndNil(LRacaList);
+      end;
+    except
+      on E: Exception do
+      begin
+        Env.Log.Error(E.Message);
+        raise Exception.Create('Error: Não foi possível recuperar a especie na base de dados.');
+      end;
+    end;
+  finally
+    LDAO.FreeMemory;
+  end;
 end;
 
 function TServiceRaca.PostService(const ABody: TJSONObject): String;

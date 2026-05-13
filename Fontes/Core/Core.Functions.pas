@@ -9,23 +9,20 @@ Uses
   ,Vcl.ComCtrls
   ,Vcl.Graphics
   ,Winapi.UrlMon
+  ,System.TypInfo
   ,System.Classes
   ,Winapi.WinSock
   ,Winapi.Windows
   ,System.SysUtils
   ,Vcl.Imaging.JPEG
   ,System.NetEncoding
-  ,Vcl.Imaging.PNGImage;
+  ,Vcl.Imaging.PNGImage
+  ,System.Generics.Collections;
 
 type
-  TJsonObjectHelper = class Helper for TJSONObject
+  TDictUtils = class
   public
-    procedure ClearAndFreeItems;
-  end;
-
-  TJsonValueHelper = class Helper for TJSONValue
-  public
-    procedure ClearAndFreeItems;
+    class procedure FreeObjects<K, V>(out ADict: TDictionary<K, V>);
   end;
 
 function ConcederAcessoPastaRede(RemotePath, UserName, Password : PAnsiChar; vGeraRaise: Boolean = False): Boolean;
@@ -342,58 +339,32 @@ begin
   Result := THashMD5.GetHashString(pValue);
 end;
 
-{ TJsonObjectHelper }
+{ TDictUtils }
 
-procedure TJsonObjectHelper.ClearAndFreeItems;
+class procedure TDictUtils.FreeObjects<K, V>(out ADict: TDictionary<K, V>);
 var
-  vIx: Integer;
-  vPar: TJSONPair;
+  LValue: V;
 begin
-  if not Assigned(Self) then
+  if not Assigned(ADict) then
     Exit;
 
-  for vIx := Self.Count - 1 downto 0 do
+  { Verifica se o valor armazenado (V) é uma classe (TObject)}
+  if PTypeInfo(TypeInfo(V))^.Kind = tkClass then
   begin
-    vPar := Self.Pairs[vIx];
-    if (vPar.JsonValue is TJSONObject) then
-      TJSONObject(vPar.JsonValue).ClearAndFreeItems;
-
-    Self.RemovePair(vPar.JsonString.Value);
-    vPar.Free;
-  end;
-end;
-
-{ TJsonValueHelper }
-
-procedure TJsonValueHelper.ClearAndFreeItems;
-var
-  vIx: Integer;
-  vPar: TJSONPair;
-  vObj: TJSONObject;
-  procedure RemovePair(vObj: TJSONObject);
-  var
-    I: Integer;
-  begin
-    for I := vObj.Count - 1 downto 0 do
+    for LValue in ADict.Values do
     begin
-      vPar := vObj.Pairs[I];
-      vObj.RemovePair(vPar.JsonString.value);
-      vPar.Free;
+      if Assigned(TObject(Pointer(@LValue)^)) then
+      begin
+        try
+          TObject(Pointer(@LValue)^).Free;
+        except
+          TObject(Pointer(@LValue)^) := nil;
+        end;
+      end;
     end;
   end;
-begin
-  if Self.ClassType = TJSONArray then
-  begin
-    for vIx := TJSONArray(Self).Count -1 downto 0 do
-    begin
-      vObj := TJSONArray(Self).Remove(vIx) as TJSONObject;
-      RemovePair(vObj);
-      if Assigned(vObj) then
-        vObj.Free;
-    end;
-  end
-  else
-    RemovePair(TJSONObject(Self));
+
+  FreeAndNil(ADict);
 end;
 
 end.

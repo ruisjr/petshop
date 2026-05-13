@@ -6,7 +6,8 @@ uses
   {Classes de Sistema}
    Horse
   {Classes de Negócio}
-  ,Controller.Base;
+  ,Controller.Base
+  ,Core.Services.Interfaces;
 
   procedure Registry;
   procedure UnRegistry;
@@ -17,11 +18,8 @@ var
 implementation
 
 uses
-  {Classes de Sistema}
-   System.JSON
   {Classes de Negócio}
-  ,Core.Functions
-  ,Services.Especie;
+  Services.Especie;
 
 { TControllerEspecie }
 
@@ -37,7 +35,7 @@ end;
 
 procedure UnRegistry;
 begin
-  LController := nil;
+  LController.FreeMemory;
 end;
 
 initialization;

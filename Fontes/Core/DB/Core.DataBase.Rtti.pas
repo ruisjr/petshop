@@ -313,6 +313,7 @@ end;
 
 function TDataBaseRtti<T>.ApplyEntityChildToParent(var pEntity: T; pEntityChild: T; pFieldName: String): IDataBaseRtti<T>;
 var
+  LEnt: TObject;
   LCtxRtti: TRttiContext;
   LTypRtti: TRttiType;
   LprpRtti: TRttiProperty;
@@ -354,44 +355,63 @@ end;
 
 function TDataBaseRtti<T>.DataSetToEntityList(pDataSet: TDataSet; var pList: TObjectList<T>): IDataBaseRtti<T>;
 var
-  vInfo: PTypeInfo;
-  vValue: TValue;
-  vField: TField;
-  vCtxRtti: TRttiContext;
-  VPrpRtti: TRttiProperty;
+  LInfo: PTypeInfo;
+  LValue: TValue;
+  LField: TField;
+  LCtxRtti: TRttiContext;
+  LPrpRtti: TRttiProperty;
+  LRttiInstance: TRttiInstanceType;
 begin
   Result := Self;
   pList.Clear;
   while not pDataSet.Eof do
   begin
-    vInfo := System.TypeInfo(T);
+    LInfo := System.TypeInfo(T);
     pList.Add(T.Create);
-    vCtxRtti := TRttiContext.Create;
+    LCtxRtti := TRttiContext.Create;
     try
-      for vField in pDataSet.Fields do
+      for LField in pDataSet.Fields do
       begin
-        for VPrpRtti in vCtxRtti.GetType(vInfo).GetProperties do
+        for LPrpRtti in LCtxRtti.GetType(LInfo).GetProperties do
         begin
-          if LowerCase(vPrpRtti.FieldName) = LowerCase(vField.FieldName) then
+          if LowerCase(LPrpRtti.FieldName) = LowerCase(LField.FieldName) then
           begin
-            vField.DisplayLabel := VPrpRtti.DisplayName;
-            case VPrpRtti.PropertyType.TypeKind of
+            LField.DisplayLabel := LPrpRtti.DisplayName;
+            case LPrpRtti.PropertyType.TypeKind of
               tkUnknown, tkString, tkWChar, tkLString, tkWString, tkUString:
-                vValue := vField.AsString;
+                LValue := LField.AsString;
               tkInteger, tkInt64:
-                vValue := vField.AsInteger;
+                LValue := LField.AsInteger;
               tkChar: ;
               tkEnumeration:
               begin
-                if (VPrpRtti.GetValue(vInfo).TypeInfo.Name = 'Boolean') then
-                  vValue := vField.AsBoolean
+                if (LPrpRtti.GetValue(LInfo).TypeInfo.Name = 'Boolean') then
+                  LValue := LField.AsBoolean
                 else
-                  vValue := vField.AsString;
+                  LValue := LField.AsString;
               end;
               tkFloat:
-                vValue := vField.AsFloat;
+                LValue := LField.AsFloat;
               tkSet: ;
-              tkClass: ;
+              tkClass:
+              begin
+                if LprpRtti.IsForeignKey then
+                begin
+                  if LprpRtti.PropertyType.IsInstance then
+                  begin
+                    LValue := LprpRtti.GetValue(Pointer(pList[Pred(pList.Count)]));
+
+                    if (LValue.AsObject = nil) then
+                    begin
+                      LRttiInstance := LprpRtti.PropertyType.AsInstance;
+                      LValue := LRttiInstance.MetaclassType.Create;
+                    end;
+                    //Campo(Obj), LprpRtti.FieldName, Valor
+                    {Aplicar o valor da primary Key no campo respectivo para PK}
+                    Self._ApplyValueToChildEntity(LprpRtti.FieldName, LValue.AsObject, LField);
+                  end;
+                end;
+              end;
               tkMethod: ;
               tkVariant: ;
               tkArray: ;
@@ -402,13 +422,13 @@ begin
               tkPointer: ;
               tkProcedure: ;
             end;
-            if VPrpRtti.PropertyType.TypeKind <> tkClass then
-              VPrpRtti.SetValue(Pointer(pList[Pred(pList.Count)]), vValue);
+//            if LPrpRtti.PropertyType.TypeKind <> tkClass then
+            LPrpRtti.SetValue(Pointer(pList[Pred(pList.Count)]), LValue);
           end;
         end;
       end;
     finally
-      vCtxRtti.Free;
+      LCtxRtti.Free;
     end;
     pDataSet.Next;
   end;

@@ -19,10 +19,8 @@ procedure UnRegistry;
 implementation
 
 uses
-  {Classes de Sistema}
-   System.JSON
   {Classes de Negócio}
-  ,Services.Pessoa;
+  Services.Pessoa;
 
 { TControllerPessoa }
 
@@ -40,7 +38,7 @@ end;
 
 procedure UnRegistry;
 begin
-  LController := nil;
+  LController.FreeMemory;
 end;
 
 initialization

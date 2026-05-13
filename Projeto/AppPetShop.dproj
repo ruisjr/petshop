@@ -106,7 +106,7 @@
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <DCC_ExeOutput>C:\PetShop\Bin</DCC_ExeOutput>
-        <DCC_UnitSearchPath>..\..\Horse\src;..\..\QuickLogger;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\Horse\src;..\..\QuickLogger;..\..\FastMM5;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DcuOutput>.\Temp</DCC_DcuOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -137,7 +137,6 @@
         </DelphiCompile>
         <DCCReference Include="AppSrvPetShop.pas">
             <Form>FrmPrincipal</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\Fontes\Core\Core.Api.pas"/>
         <DCCReference Include="..\Fontes\Core\Core.Email.pas"/>
@@ -174,8 +173,11 @@
         <DCCReference Include="..\Fontes\Controllers\Controller.Raca.pas"/>
         <DCCReference Include="..\Fontes\Services\Services.Raca.pas"/>
         <DCCReference Include="..\Fontes\Entidades\Entidade.Raca.pas"/>
-        <DCCReference Include="..\Fontes\Entidades\Entidade.Pais.pas"/>
+        <DCCReference Include="..\Fontes\Controllers\Controller.Municipio.pas"/>
+        <DCCReference Include="..\Fontes\Services\Services.Municipio.pas"/>
         <DCCReference Include="..\Fontes\Entidades\Entidade.Estado.pas"/>
+        <DCCReference Include="..\Fontes\Entidades\Entidade.Municipio.pas"/>
+        <DCCReference Include="..\Fontes\Entidades\Entidade.Pais.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -1060,13 +1062,9 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="iPad_Setting58">
-                    <Platform Name="iOSDevice64">
-                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                    <Platform Name="iOSSimARM64">
-                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                <DeployClass Name="AndroidServiceOutput_Android32">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -1096,9 +1094,13 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="AndroidServiceOutput_Android32">
-                    <Platform Name="Android64">
-                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                <DeployClass Name="iPad_Setting58">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>

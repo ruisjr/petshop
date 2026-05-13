@@ -138,11 +138,12 @@ end;
 
 procedure TDataBaseConnection.FreeMemory;
 begin
-  FreeInstance;
+  Self.FreeInstance;
   if FConnection.Connected then
     FConnection.Close;
 
   FreeAndNil(Self.FConnectionLock);
+  FreeAndNil(FLink);
   FreeAndNil(FConnection);
 end;
 

@@ -47,7 +47,7 @@ begin
     try
       LPessoa := LDAO.Where('id', OtEqual, id).First;
       try
-        Result := TJson.ObjectToJsonObject(LPessoa).ToJSON;
+        Result := TJson.ObjectToJsonString(LPessoa);
       finally
         FreeAndNil(LPessoa);
       end;
