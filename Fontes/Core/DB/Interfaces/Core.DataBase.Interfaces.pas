@@ -127,6 +127,7 @@ type
     function LoadObjectForeignKey(pEntity: T): TDictionary<String, TObject>;
   end;
 
+
 implementation
 
 end.

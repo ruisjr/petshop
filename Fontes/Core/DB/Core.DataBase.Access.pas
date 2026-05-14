@@ -31,6 +31,7 @@ type
     FWhere: String;
     FFields: String;
     FList: TObjectList<T>;
+    FListDict: TObjectList<T>;
     FDictChild: TDictionary<String, TObject>;
     FParameters: TDictionary<String, TValue>;
     FDataSource: TDataSource;
@@ -186,15 +187,21 @@ var
   LSQL: String;
   LObj: TObject;
   LParameter: TDictionary<String, TValue>;
+  LDict: TDictionary<string, TObject>;
 begin
-  FDictChild := TDataBaseRtti<T>.New(FEntity).LoadObjectForeignKey(pEntity);
+  LDict := TDataBaseRtti<T>.New(FEntity).LoadObjectForeignKey(pEntity);
 
-  if not Assigned(FDictChild) then
+  if not Assigned(LDict) then
     Exit;
 
-  for LKey in FDictChild.Keys do
+  if not Assigned(FListDict) then
+    FListDict := TObjectList<T>.Create;
+
+  FListDict.Add(LDict);
+
+  for LKey in LDict.Keys do
   begin
-    LObj := TObject(FDictChild[LKey]);
+    LObj := TObject(LDict[LKey]);
     LParameter := Self.GetParameterChild(LObj);
     try
       FQuery.DataSet.DisableControls;
@@ -327,7 +334,11 @@ begin
     FreeAndNil(FParameters);
   end;
 
-  TDictUtils.FreeObjects<String, TObject>(FDictChild);
+  if Assigned(FListDict) then
+  begin
+    FListDict.Clear;
+    FreeAndNil(FListDict);
+  end;
 end;
 
 function TDataBaseDAO<T>.Bind(const pForm: TForm): IDataBaseDAO<T>;
