@@ -46,7 +46,7 @@ begin
       LUsuario := LDAO
                     .Fields('id, nome, login, data_cadastro, data_ultimo_acesso, email, bloqueado, ativo, primeiro_acesso')
                     .Where('id', OtEqual, id)
-                  .First;
+                  .Find;
       try
         Result := TJson.ObjectToJsonString(LUsuario);
       finally
@@ -72,7 +72,7 @@ begin
   LDAO := TDataBaseDAO<TUsuario>.Create;
   try
     try
-      LUsuarioList := LDAO.Fields('id, nome, login, data_cadastro, data_ultimo_acesso, email, bloqueado, ativo, primeiro_acesso').ToList(50, 1);
+      LUsuarioList := LDAO.Fields('id, nome, login, data_cadastro, data_ultimo_acesso, email, bloqueado, ativo, primeiro_acesso').FindAll(50, 1);
       try
         Result := TJson.ObjectListToString<TUsuario>(LUsuarioList);
       finally

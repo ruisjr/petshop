@@ -51,8 +51,8 @@ type
     function GroupBy(const pField: String): IDataBaseDAO<T>;
     function Limit(const pLimit: Integer) :IDataBaseDAO<T>;
 
-    function First: T;
-    function ToList(const pRecMax: Integer = 0; const pRecSkip: Integer = 0): TObjectList<T>;
+    function Find: T;
+    function FindAll(const pRecMax: Integer = 0; const pRecSkip: Integer = 0): TObjectList<T>;
     function Bind(const pForm: TForm): IDataBaseDAO<T>;
   end;
 

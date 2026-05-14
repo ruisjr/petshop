@@ -44,7 +44,7 @@ begin
   LDAO := TDataBaseDAO<TEspecie>.Create;
   try
     try
-      LEspecieList := LDAO.ToList(50, 1);
+      LEspecieList := LDAO.FindAll(50, 1);
       try
         Result := TJson.ObjectListToString<TEspecie>(LEspecieList);
       finally
@@ -71,7 +71,7 @@ begin
   LDAO := TDataBaseDAO<TEspecie>.Create;
   try
     try
-      LEspecie := LDAO.Where('id', OtEqual, id).First;
+      LEspecie := LDAO.Where('id', OtEqual, id).Find;
       try
         Result := TJson.ObjectToJsonString(LEspecie);
       finally

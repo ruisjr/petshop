@@ -46,7 +46,6 @@ begin
       LJsonArray.AddElement(LJSONObj);
     end;
 
-//    Result := LJsonArray.Format(2); // O parâmetro 2 é para identação (pretty print)
     Result := LJsonArray.ToJSON;
   finally
     LJsonArray.ClearAndFreeItems;

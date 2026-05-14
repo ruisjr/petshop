@@ -70,8 +70,8 @@ type
     function Where(const pField: String; const pOperatorType: TOperatorType; const pValue: TValue): IDataBaseDAO<T>;
     function WhereAnd(const pField: String; const pOperatorType: TOperatorType; const pValue: TValue): IDataBaseDAO<T>;
 
-    function ToList(const pRecMax: Integer = 0; const pRecSkip: Integer = 0): TObjectList<T>;
-    function First: T;
+    function FindAll(const pRecMax: Integer = 0; const pRecSkip: Integer = 0): TObjectList<T>;
+    function Find: T;
     function Bind(const pForm: TForm): IDataBaseDAO<T>;
 
     function GetNewID: Integer;
@@ -271,7 +271,7 @@ begin
   FFields := pFields;
 end;
 
-function TDataBaseDAO<T>.First: T;
+function TDataBaseDAO<T>.Find: T;
 var
   LSQL: String;
 begin
@@ -389,7 +389,7 @@ begin
   end;
 end;
 
-function TDataBaseDAO<T>.ToList(const pRecMax: Integer; const pRecSkip: Integer): TObjectList<T>;
+function TDataBaseDAO<T>.FindAll(const pRecMax: Integer; const pRecSkip: Integer): TObjectList<T>;
 var
   LSQL: String;
   LObj: T;

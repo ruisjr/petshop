@@ -45,7 +45,7 @@ begin
   LDAO := TDataBaseDAO<TPessoa>.Create;
   try
     try
-      LPessoa := LDAO.Where('id', OtEqual, id).First;
+      LPessoa := LDAO.Where('id', OtEqual, id).Find;
       try
         Result := TJson.ObjectToJsonString(LPessoa);
       finally
@@ -71,7 +71,7 @@ begin
   LDAO := TDataBaseDAO<TPessoa>.Create;
   try
     try
-      LPessoaList := LDAO.ToList(50, 1);
+      LPessoaList := LDAO.FindAll(50, 1);
       try
         Result := TJson.ObjectListToString<TPessoa>(LPessoaList);
       finally

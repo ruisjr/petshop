@@ -44,7 +44,7 @@ begin
   LDAO := TDataBaseDAO<TRaca>.Create;
   try
     try
-      LRaca := LDAO.Where('id', OtEqual, id).First;
+      LRaca := LDAO.Where('id', OtEqual, id).Find;
       try
         Result := TJson.ObjectToJsonString(LRaca);
       finally
@@ -70,7 +70,7 @@ begin
   LDAO := TDataBaseDAO<TRaca>.Create;
   try
     try
-      LRacaList := LDAO.ToList(50, 1);
+      LRacaList := LDAO.FindAll(50, 1);
       try
         Result := TJson.ObjectListToString<TRaca>(LRacaList);
       finally
