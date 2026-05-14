@@ -47,7 +47,7 @@ procedure TFrmPrincipal.btnStartClick(Sender: TObject);
 begin
   if not THorse.IsRunning then
   begin
-    THorse.Listen(spePorta.Value);d
+    THorse.Listen(spePorta.Value);TEstes
     Env.Log.Info(Format('Serviço iniciado na porta %d.', [spePorta.Value]));
   end;
 end;
