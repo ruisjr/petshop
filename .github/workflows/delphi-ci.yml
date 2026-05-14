@@ -25,7 +25,7 @@ jobs:
           :: Compila o projeto (.dproj)
           :: -B: Build All
           :: -Q: Quiet mode
-          msbuild /t:Build /p:Config=Release "SeuProjeto.dproj"
+          msbuild /t:Build /p:Config=Release "AppPetShop.dproj"
 
       - name: Run Tests (Opcional)
         if: success()
