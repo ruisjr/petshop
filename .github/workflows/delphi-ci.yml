@@ -1,0 +1,34 @@
+name: Delphi CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    # Usa a sua máquina onde o Delphi Seattle está instalado
+    runs-on: self-hosted 
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Project
+        shell: cmd
+        run: |
+          :: Configura as variáveis de ambiente do Delphi Seattle
+          :: Ajuste o caminho conforme sua instalação
+          call "C:\Program Files (x86)\Embarcadero\Studio\17.0\bin\rsvars.bat"
+          
+          :: Compila o projeto (.dproj)
+          :: -B: Build All
+          :: -Q: Quiet mode
+          msbuild /t:Build /p:Config=Release "SeuProjeto.dproj"
+
+      - name: Run Tests (Opcional)
+        if: success()
+        run: |
+          :: Se você usa DUnit ou DUnitX, execute o .exe de testes aqui
+          "bin\ProjectTests.exe" -exit:ContinueOnFail
